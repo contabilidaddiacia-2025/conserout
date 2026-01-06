@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CONSEROUT - Iniciar Sesión</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, hsl(220, 90%, 12%) 0%, hsl(280, 70%, 15%) 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+      top: -250px;
+      right: -250px;
+      border-radius: 50%;
+      animation: pulse 4s ease-in-out infinite;
+    }
+
+    body::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%);
+      bottom: -200px;
+      left: -200px;
+      border-radius: 50%;
+      animation: pulse 5s ease-in-out infinite;
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 450px;
+      padding: var(--spacing-lg);
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-xl);
+      padding: var(--spacing-2xl);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: var(--spacing-2xl);
+    }
+
+    .login-logo {
+      width: 80px;
+      height: 80px;
+      background: var(--gradient-primary);
+      border-radius: var(--radius-xl);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--spacing-lg);
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-bold);
+      color: white;
+      box-shadow: var(--shadow-glow);
+    }
+
+    .login-title {
+      font-size: var(--font-size-2xl);
+      margin-bottom: var(--spacing-sm);
+      background: linear-gradient(135deg, white 0%, rgba(255, 255, 255, 0.7) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .login-subtitle {
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-sm);
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-lg);
+    }
+
+    .login-footer {
+      margin-top: var(--spacing-xl);
+      padding-top: var(--spacing-lg);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+    }
+
+    .demo-credentials {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-md);
+      margin-top: var(--spacing-lg);
+      font-size: var(--font-size-xs);
+      color: var(--color-text-secondary);
+    }
+
+    .demo-credentials h4 {
+      color: var(--color-primary-light);
+      font-size: var(--font-size-sm);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .demo-credentials p {
+      margin: var(--spacing-xs) 0;
+      font-family: var(--font-family-mono);
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card animate-fadeIn">
+      <div class="login-header">
+        <div class="login-logo">C</div>
+        <h1 class="login-title">CONSEROUT</h1>
+        <p class="login-subtitle">Sistema de Gestión de Outsourcing</p>
+      </div>
+
+      <form class="login-form" id="loginForm">
+        <div class="form-group">
+          <label class="form-label required" for="username">Usuario</label>
+          <input 
+            type="text" 
+            id="username" 
+            class="form-input" 
+            placeholder="Ingrese su usuario"
+            required
+            autocomplete="username"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required" for="password">Contraseña</label>
+          <input 
+            type="password" 
+            id="password" 
+            class="form-input" 
+            placeholder="Ingrese su contraseña"
+            required
+            autocomplete="current-password"
+          >
+        </div>
+
+        <div id="errorMessage" class="alert alert-danger" style="display: none;">
+          <span>⚠</span>
+          <span id="errorText"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg w-full">
+          Iniciar Sesión
+        </button>
+      </form>
+
+      <div class="demo-credentials">
+        <h4>Credenciales de Demostración</h4>
+        <p><strong>Admin:</strong> admin / admin123</p>
+        <p><strong>Gestor:</strong> gestor / gestor123</p>
+        <p><strong>Técnico:</strong> tecnico / tecnico123</p>
+      </div>
+
+      <div class="login-footer">
+        <p class="text-sm text-secondary">
+          © 2024 CONSEROUT. Todos los derechos reservados.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/database.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/utils.js"></script>
+  <script>
+    // Handle login form submission
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const errorMessage = document.getElementById('errorMessage');
+      const errorText = document.getElementById('errorText');
+      
+      // Hide previous errors
+      errorMessage.style.display = 'none';
+      
+      // Attempt login
+      const result = auth.login(username, password);
+      
+      if (result.success) {
+        // Show success message
+        showToast('Inicio de sesión exitoso', 'success');
+        
+        // Redirect to dashboard
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 500);
+      } else {
+        // Show error message
+        errorText.textContent = result.message;
+        errorMessage.style.display = 'flex';
+      }
+    });
+
+    // Check if already logged in
+    if (auth.isAuthenticated()) {
+      window.location.href = 'dashboard.html';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+hola te pongo en contexto, necesito creees un sistema web, el cual me va a permitir ingresar por medio de perfiles de usuario, necesito tenga un dashboard, que permita visualizar los contratos existentes, cantidad de equipos instalados, sin instalar, valores de cada contrato(valor cobrado, valor por cobrar y asi)
+
+Te pongo en contesxto de que sistema es:
+CONSEROUT es un sistema web de gestión de servicios de outsourcing para empresas que ofrecen servicios de mantenimiento, instalación y control de equipos (como impresoras, consumibles, materiales técnicos, etc.).
+Permite administrar clientes, contratos, técnicos, equipos, consumibles, servicios realizados y generar reportes.
+
+Arquitectura y Niveles del Sistema
+El sistema se organiza en 5 niveles:
+
+Nivel de Mantenimiento:
+Gestión de datos base del sistema (equipos, suministros, usuarios, departamentos).
+
+Nivel de Operación:
+Gestión de clientes, contratos, técnicos, tarifas, equipos, bodega y cobros.
+
+Nivel de Servicios:
+Registro de servicios prestados: instalación, mantenimiento, cambios de consumibles, recepción de bodega, etc.
+
+Reportería:
+Generación de reportes (consumos, materiales, mantenimientos, equipos por contrato, etc.).
+
+Avisos y Notificaciones:
+Comunicación interna entre perfiles del sistema.
+
+ Módulos Principales
+1. Mantenimiento
+Tipos de equipo, marcas, modelos
+
+Tipos de impresión, tamaños de impresión
+
+Tipos de mantenimiento (preventivo/correctivo)
+
+Tipos de suministros
+
+Perfiles de acceso y usuarios
+
+Departamentos
+
+2. Operación
+Clientes (activos/pasivos)
+
+Contratos (vigentes/cerrados)
+
+Asignación de hitos, técnicos y tarifas
+
+Gestión de equipos y contadores
+
+Bodega (recursos y consumibles)
+
+Cobros (módulo financiero)
+
+3. Servicios
+Recepción de bodega
+
+Instalación de equipos
+
+Registro de contadores
+
+Cambio de consumibles
+
+Asignación de materiales
+
+Mantenimientos preventivos y correctivos
+
+Registro histórico de equipos
+
+4. Reportes
+Consumo mensual
+
+Consumibles y materiales mensuales
+
+Mantenimientos realizados
+
+Equipos por contrato
+
+Servicios por usuario, contrato, técnico o fechas
+

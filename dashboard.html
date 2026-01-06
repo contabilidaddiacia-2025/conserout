@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - CONSEROUT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/modules.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--color-bg-secondary);
+            border-right: 1px solid var(--color-border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: var(--z-sticky);
+        }
+
+        .sidebar-header {
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .sidebar-logo {
+            width: 48px;
+            height: 48px;
+            background: var(--gradient-primary);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-size-xl);
+            font-weight: var(--font-weight-bold);
+            color: white;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .sidebar-brand h2 {
+            font-size: var(--font-size-lg);
+            margin: 0;
+        }
+
+        .sidebar-brand p {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-tertiary);
+            margin: 0;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: var(--spacing-md);
+        }
+
+        .nav-section {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .nav-section-title {
+            font-size: var(--font-size-xs);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: var(--spacing-sm) var(--spacing-md);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-sm) var(--spacing-md);
+            color: var(--color-text-secondary);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: var(--font-size-sm);
+            text-decoration: none;
+        }
+
+        .nav-item:hover {
+            background: var(--color-surface-hover);
+            color: var(--color-text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-item-icon {
+            font-size: var(--font-size-lg);
+            width: 24px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            padding: var(--spacing-md);
+            border-top: 1px solid var(--color-border);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .user-profile:hover {
+            background: var(--color-surface-hover);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-full);
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: var(--font-weight-bold);
+            color: white;
+        }
+
+        .user-info h4 {
+            font-size: var(--font-size-sm);
+            margin: 0;
+            color: var(--color-text-primary);
+        }
+
+        .user-info p {
+            font-size: var(--font-size-xs);
+            margin: 0;
+            color: var(--color-text-tertiary);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            height: 70px;
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--spacing-xl);
+            position: sticky;
+            top: 0;
+            z-index: var(--z-fixed);
+        }
+
+        .topbar-title h1 {
+            font-size: var(--font-size-2xl);
+            margin: 0;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .notification-btn {
+            position: relative;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 18px;
+            height: 18px;
+            background: var(--color-danger);
+            border-radius: var(--radius-full);
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: var(--font-weight-bold);
+        }
+
+        .content-area {
+            flex: 1;
+            padding: var(--spacing-xl);
+            overflow-y: auto;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .chart-container {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            height: 400px;
+        }
+
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .chart-title {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text-primary);
+            margin: 0;
+        }
+
+        @media (max-width: 1400px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">C</div>
+                <div class="sidebar-brand">
+                    <h2>CONSEROUT</h2>
+                    <p>Gestión de Outsourcing</p>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Principal</div>
+                    <a href="dashboard.html" class="nav-item active">
+                        <span class="nav-item-icon">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Nivel 1: Mantenimiento</div>
+                    <a href="#" class="nav-item" data-module="equipos">
+                        <span class="nav-item-icon">🖨️</span>
+                        <span>Tipos de Equipo</span>
+                    </a>
+                    <a href="#" class="nav-item" data-module="usuarios">
+                        <span class="nav-item-icon">👥</span>
+                        <span>Usuarios</span>
+                    </a>
+                    <a href="#" class="nav-item" data-module="departamentos">
+                        <span class="nav-item-icon">🏢</span>
+                        <span>Departamentos</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Nivel 2: Operación</div>
+                    <a href="#" class="nav-item" data-module="clientes">
+                        <span class="nav-item-icon">🏪</span>
+                        <span>Clientes</span>
+                    </a>
+                    <a href="#" class="nav-item" data-module="contratos">
+                        <span class="nav-item-icon">📄</span>
+                        <span>Contratos</span>
+                    </a>
+                    <a href="#" class="nav-item" data-module="equipos-gestion">
+                        <span class="nav-item-icon">⚙️</span>
+                        <span>Equipos</span>
+                    </a>
+                    <a href="#" class="nav-item" data-module="bodega">
+                        <span class="nav-item-icon">📦</span>
+                        <span>Bodega</span>
+                    </a>
+                    <a href="#" class="nav-item" data-module="cobros">
+                        <span class="nav-item-icon">💰</span>
+                        <span>Cobros</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Nivel 3: Servicios</div>
+                    <a href="#" class="nav-item" data-module="contadores">
+                        <span class="nav-item-icon">🔢</span>
+                        <span>Registro de Contadores</span>
+                    </a>
+                    <a href="#" class="nav-item" data-module="instalaciones">
+                        <span class="nav-item-icon">🔧</span>
+                        <span>Instalaciones</span>
+                    </a>
+                    <a href="#" class="nav-item" data-module="mantenimientos">
+                        <span class="nav-item-icon">🛠️</span>
+                        <span>Mantenimientos</span>
+                    </a>
+                    <a href="#" class="nav-item" data-module="consumibles">
+                        <span class="nav-item-icon">🎨</span>
+                        <span>Cambio Consumibles</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Nivel 4: Reportería</div>
+                    <a href="#" class="nav-item" data-module="reportes">
+                        <span class="nav-item-icon">📈</span>
+                        <span>Reportes</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Nivel 5: Notificaciones</div>
+                    <a href="#" class="nav-item" data-module="notificaciones">
+                        <span class="nav-item-icon">🔔</span>
+                        <span>Avisos</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile" id="userProfile">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-info">
+                        <h4 id="userName">Usuario</h4>
+                        <p id="userRole">Perfil</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="topbar">
+                <div class="topbar-title">
+                    <h1>Dashboard</h1>
+                </div>
+                <div class="topbar-actions">
+                    <button class="btn btn-icon btn-ghost notification-btn">
+                        <span>🔔</span>
+                        <span class="notification-badge">3</span>
+                    </button>
+                    <button class="btn btn-secondary" id="logoutBtn">
+                        <span>🚪</span>
+                        <span>Cerrar Sesión</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- Stats Cards -->
+                <div class="dashboard-grid">
+                    <div class="stat-card hover-lift">
+                        <div class="stat-card-header">
+                            <div class="stat-card-title">Contratos Vigentes</div>
+                            <div class="stat-card-icon"
+                                style="background: rgba(34, 197, 94, 0.2); color: var(--color-success);">
+                                📄
+                            </div>
+                        </div>
+                        <div class="stat-card-value" id="contratosVigentes">0</div>
+                        <div class="stat-card-change positive">
+                            <span>↑</span>
+                            <span id="contratosChange">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card hover-lift">
+                        <div class="stat-card-header">
+                            <div class="stat-card-title">Equipos Instalados</div>
+                            <div class="stat-card-icon"
+                                style="background: rgba(59, 130, 246, 0.2); color: var(--color-primary);">
+                                🖨️
+                            </div>
+                        </div>
+                        <div class="stat-card-value" id="equiposInstalados">0</div>
+                        <div class="stat-card-change">
+                            <span id="equiposSinInstalar">0</span>
+                            <span>sin instalar</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card hover-lift">
+                        <div class="stat-card-header">
+                            <div class="stat-card-title">Valor Cobrado</div>
+                            <div class="stat-card-icon"
+                                style="background: rgba(168, 85, 247, 0.2); color: var(--color-secondary);">
+                                💰
+                            </div>
+                        </div>
+                        <div class="stat-card-value" id="valorCobrado">$0</div>
+                        <div class="stat-card-change">
+                            <span id="valorPorCobrar">$0</span>
+                            <span>por cobrar</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card hover-lift">
+                        <div class="stat-card-header">
+                            <div class="stat-card-title">Servicios del Mes</div>
+                            <div class="stat-card-icon"
+                                style="background: rgba(251, 146, 60, 0.2); color: var(--color-warning);">
+                                🔧
+                            </div>
+                        </div>
+                        <div class="stat-card-value" id="serviciosMes">0</div>
+                        <div class="stat-card-change positive">
+                            <span>↑</span>
+                            <span id="serviciosChange">+0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div
+                    style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--spacing-lg); margin-bottom: var(--spacing-xl);">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Consumo Mensual por Contrato</h3>
+                        </div>
+                        <canvas id="consumoChart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Equipos por Marca</h3>
+                        </div>
+                        <canvas id="marcasChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Contratos Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Contratos Activos</h3>
+                        <button class="btn btn-primary btn-sm" data-module="contratos">
+                            <span>+</span>
+                            <span>Nuevo Contrato</span>
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table class="table" id="contratosTable">
+                            <thead>
+                                <tr>
+                                    <th>N° Contrato</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha Inicio</th>
+                                    <th>Fecha Fin</th>
+                                    <th>Equipos</th>
+                                    <th>Valor Total</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contratosTableBody">
+                                <!-- Data loaded by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/database.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/modules/contadores.js"></script>
+    <script src="js/modules/reportes.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+
+</html>
