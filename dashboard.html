@@ -281,17 +281,41 @@
             <nav class="sidebar-nav">
                 <div class="nav-section">
                     <div class="nav-section-title">Principal</div>
-                    <a href="dashboard.html" class="nav-item active">
+                    <a href="#" class="nav-item active" data-module="dashboard">
                         <span class="nav-item-icon">📊</span>
-                        <span>Dashboard</span>
+                        <span>Resumen</span>
                     </a>
                 </div>
 
                 <div class="nav-section">
                     <div class="nav-section-title">Nivel 1: Mantenimiento</div>
-                    <a href="#" class="nav-item" data-module="equipos">
+                    <a href="#" class="nav-item" data-module="marcas">
+                        <span class="nav-item-icon">🏷️</span>
+                        <span>Marcas</span>
+                    </a>
+                    <a href="#" class="nav-item" data-module="modelos">
+                        <span class="nav-item-icon">📱</span>
+                        <span>Modelos</span>
+                    </a>
+                    <a href="#" class="nav-item" data-module="tipos-equipo">
                         <span class="nav-item-icon">🖨️</span>
                         <span>Tipos de Equipo</span>
+                    </a>
+                    <a href="#" class="nav-item" data-module="tipos-impresion">
+                        <span class="nav-item-icon">🖌️</span>
+                        <span>Tipos de Impresión</span>
+                    </a>
+                    <a href="#" class="nav-item" data-module="tamanos-impresion">
+                        <span class="nav-item-icon">📄</span>
+                        <span>Tamaños de Papel</span>
+                    </a>
+                    <a href="#" class="nav-item" data-module="tipos-mantenimiento">
+                        <span class="nav-item-icon">🛠️</span>
+                        <span>Tipos Mantenimiento</span>
+                    </a>
+                    <a href="#" class="nav-item" data-module="tipos-suministro">
+                        <span class="nav-item-icon">📦</span>
+                        <span>Tipos Suministro</span>
                     </a>
                     <a href="#" class="nav-item" data-module="usuarios">
                         <span class="nav-item-icon">👥</span>
@@ -312,6 +336,14 @@
                     <a href="#" class="nav-item" data-module="contratos">
                         <span class="nav-item-icon">📄</span>
                         <span>Contratos</span>
+                    </a>
+                    <a href="#" class="nav-item" data-module="tecnicos-tarifas">
+                        <span class="nav-item-icon">💰</span>
+                        <span>Técnicos y Tarifas</span>
+                    </a>
+                    <a href="#" class="nav-item" data-module="cobros">
+                        <span class="nav-item-icon">💸</span>
+                        <span>Facturación y Cobros</span>
                     </a>
                     <a href="#" class="nav-item" data-module="equipos-gestion">
                         <span class="nav-item-icon">⚙️</span>
@@ -510,10 +542,25 @@
 
     <script src="js/database.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/permissions.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/modules/clientes.js"></script>
+    <script src="js/modules/equipos.js"></script>
+    <script src="js/modules/bodega.js"></script>
+    <script src="js/modules/bodega-reportes.js"></script>
+    <script src="js/modules/marcas.js"></script>
+    <script src="js/modules/modelos.js"></script>
+    <script src="js/modules/usuarios.js"></script>
+    <script src="js/modules/configuracion.js"></script>
+    <script src="js/modules/tecnicos-tarifas.js"></script>
+    <script src="js/modules/cobros.js"></script>
+    <script src="js/modules/materiales.js"></script>
+    <script src="js/modules/cambio-consumibles.js"></script>
+    <script src="js/modules/servicios.js"></script>
     <script src="js/modules/contadores.js"></script>
     <script src="js/modules/reportes.js"></script>
+    <script src="js/modules/notificaciones.js"></script>
     <script src="js/dashboard.js"></script>
 </body>
 

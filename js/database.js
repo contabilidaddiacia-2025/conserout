@@ -25,9 +25,30 @@ class Database {
     seedDatabase() {
         // Perfiles
         this.setData('perfiles', [
-            { id: 1, nombre: 'Administrador', permisos: ['all'] },
-            { id: 2, nombre: 'Gestor', permisos: ['clientes', 'contratos', 'reportes', 'equipos', 'cobros'] },
-            { id: 3, nombre: 'Técnico', permisos: ['servicios', 'equipos_view', 'contadores'] }
+            {
+                id: 1,
+                nombre: 'Administrador',
+                permisos: ['all']  // Full access
+            },
+            {
+                id: 2,
+                nombre: 'Gestor',
+                permisos: [
+                    'dashboard',
+                    'clientes', 'contratos', 'equipos-gestion', 'bodega',
+                    'contadores', 'cambio-consumibles', 'instalaciones', 'mantenimientos',
+                    'reportes', 'notificaciones'
+                ]
+            },
+            {
+                id: 3,
+                nombre: 'Técnico',
+                permisos: [
+                    'dashboard',
+                    'contadores', 'cambio-consumibles', 'instalaciones', 'mantenimientos',
+                    'equipos-view'  // View only for equipment
+                ]
+            }
         ]);
 
         // Departamentos
@@ -130,10 +151,11 @@ class Database {
 
         // Suministros
         this.setData('suministros', [
-            { id: 1, tipo_suministro_id: 1, nombre: 'Toner HP 58A Negro', codigo: 'CF258A', stock_minimo: 5 },
-            { id: 2, tipo_suministro_id: 1, nombre: 'Toner Canon 051', codigo: 'CRG051', stock_minimo: 5 },
-            { id: 3, tipo_suministro_id: 2, nombre: 'Tinta Epson 664 Negro', codigo: 'T664120', stock_minimo: 10 },
-            { id: 4, tipo_suministro_id: 3, nombre: 'Papel A4 75g', codigo: 'PAP-A4-75', stock_minimo: 50 }
+            { id: 1, tipo_suministro_id: 1, nombre: 'Toner HP 58A Negro', codigo: 'HP-58A', stock_minimo: 5, modelos_compatibles: [1] },
+            { id: 2, tipo_suministro_id: 1, nombre: 'Toner Canon 051', codigo: 'CAN-051', stock_minimo: 3, modelos_compatibles: [3] },
+            { id: 3, tipo_suministro_id: 2, nombre: 'Tinta Epson 664 Negro', codigo: 'EPS-664-BK', stock_minimo: 10, modelos_compatibles: [2] },
+            { id: 4, tipo_suministro_id: 2, nombre: 'Tinta Epson 664 Color', codigo: 'EPS-664-C', stock_minimo: 10, modelos_compatibles: [2] },
+            { id: 5, tipo_suministro_id: 3, nombre: 'Papel A4 75g', codigo: 'PAP-A4-75', stock_minimo: 50, modelos_compatibles: [] }
         ]);
 
         // Clientes
@@ -283,7 +305,8 @@ class Database {
             { id: 1, suministro_id: 1, cantidad: 25, ubicacion: 'Estante A1', fecha_ingreso: '2024-01-10' },
             { id: 2, suministro_id: 2, cantidad: 18, ubicacion: 'Estante A2', fecha_ingreso: '2024-01-10' },
             { id: 3, suministro_id: 3, cantidad: 45, ubicacion: 'Estante B1', fecha_ingreso: '2024-01-10' },
-            { id: 4, suministro_id: 4, cantidad: 120, ubicacion: 'Estante C1', fecha_ingreso: '2024-01-10' }
+            { id: 4, suministro_id: 4, cantidad: 35, ubicacion: 'Estante B2', fecha_ingreso: '2024-01-10' },
+            { id: 5, suministro_id: 5, cantidad: 120, ubicacion: 'Estante C1', fecha_ingreso: '2024-01-10' }
         ]);
 
         // Servicios

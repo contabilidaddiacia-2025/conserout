@@ -1,392 +1,392 @@
 /**
- * CONSEROUT - Reports Module
- * Comprehensive reporting system for consumption, equipment, and services
+ * CONSEROUT - Advanced Reporting Module
+ * Detailed analytics for consumables, maintenance, and fleet status
  */
 
-// Extend App class with reports module
 App.prototype.loadReportesModule = function (container) {
-    container.innerHTML = `
+  container.innerHTML = `
     <div class="module-container">
       <div class="module-header">
-        <h2 class="module-title">Reportes y Análisis</h2>
+        <h2 class="module-title">Reportes y Análisis Avanzados</h2>
       </div>
 
-      <div class="tabs">
-        <button class="tab active" onclick="app.switchReportTab('consumo')">Consumo Mensual</button>
-        <button class="tab" onclick="app.switchReportTab('equipos')">Equipos por Contrato</button>
-        <button class="tab" onclick="app.switchReportTab('servicios')">Servicios Realizados</button>
-      </div>
-
-      <!-- Consumo Mensual Tab -->
-      <div class="tab-content active" id="tab-consumo">
-        <div class="filters-container">
-          <div class="filters-grid">
-            <div class="form-group m-0">
-              <label class="form-label">Contrato</label>
-              <select class="form-select" id="reportContratoFilter">
-                <option value="">Todos los contratos</option>
-              </select>
-            </div>
-            <div class="form-group m-0">
-              <label class="form-label">Desde</label>
-              <input type="month" class="form-input" id="reportFechaDesde">
-            </div>
-            <div class="form-group m-0">
-              <label class="form-label">Hasta</label>
-              <input type="month" class="form-input" id="reportFechaHasta" value="${getCurrentYearMonth()}">
-            </div>
-            <div style="display: flex; align-items: end;">
-              <button class="btn btn-primary w-full" onclick="app.generateConsumoReport()">
-                <span>📊</span>
-                <span>Generar Reporte</span>
-              </button>
-            </div>
+      <div class="data-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--spacing-lg);">
+        <!-- Consumables Report Card -->
+        <div class="card hover-lift" onclick="app.showReporteConsumibles()">
+          <div class="card-body text-center" style="padding: var(--spacing-xl);">
+            <div style="font-size: 3rem; margin-bottom: var(--spacing-md);">📦</div>
+            <h3 class="card-title">Consumo de Suministros</h3>
+            <p class="text-tertiary">Análisis de salida de suministros por contrato y equipo.</p>
+            <button class="btn btn-sm btn-ghost mt-md">Ver Reporte →</button>
           </div>
         </div>
 
-        <div id="reporteConsumoContainer"></div>
-      </div>
-
-      <!-- Equipos por Contrato Tab -->
-      <div class="tab-content" id="tab-equipos">
-        <div class="filters-container">
-          <div class="filters-grid">
-            <div class="form-group m-0">
-              <label class="form-label required">Contrato</label>
-              <select class="form-select" id="reportEquiposContrato">
-                <option value="">Seleccione un contrato</option>
-              </select>
-            </div>
-            <div style="display: flex; align-items: end;">
-              <button class="btn btn-primary w-full" onclick="app.generateEquiposReport()">
-                <span>📊</span>
-                <span>Generar Reporte</span>
-              </button>
-            </div>
+        <!-- Contracts Summary Card -->
+        <div class="card hover-lift" onclick="app.showReporteContratos()">
+          <div class="card-body text-center" style="padding: var(--spacing-xl);">
+            <div style="font-size: 3rem; margin-bottom: var(--spacing-md);">📝</div>
+            <h3 class="card-title">Resumen de Contratos</h3>
+            <p class="text-tertiary">Vigencia, valores y estados de todos los contratos y proyectos.</p>
+            <button class="btn btn-sm btn-ghost mt-md">Ver Reporte →</button>
           </div>
         </div>
 
-        <div id="reporteEquiposContainer"></div>
-      </div>
-
-      <!-- Servicios Tab -->
-      <div class="tab-content" id="tab-servicios">
-        <div class="filters-container">
-          <div class="filters-grid">
-            <div class="form-group m-0">
-              <label class="form-label">Desde</label>
-              <input type="date" class="form-input" id="serviciosFechaDesde">
-            </div>
-            <div class="form-group m-0">
-              <label class="form-label">Hasta</label>
-              <input type="date" class="form-input" id="serviciosFechaHasta" value="${getCurrentDate()}">
-            </div>
-            <div style="display: flex; align-items: end;">
-              <button class="btn btn-primary w-full" onclick="app.generateServiciosReport()">
-                <span>📊</span>
-                <span>Generar Reporte</span>
-              </button>
-            </div>
+        <!-- Counter Analysis Card -->
+        <div class="card hover-lift" onclick="app.showReporteContadoresContrato()">
+          <div class="card-body text-center" style="padding: var(--spacing-xl);">
+            <div style="font-size: 3rem; margin-bottom: var(--spacing-md);">📊</div>
+            <h3 class="card-title">Lecturas por Contrato</h3>
+            <p class="text-tertiary">Reporte de contadores acumulados y consumos por periodo.</p>
+            <button class="btn btn-sm btn-ghost mt-md">Ver Reporte →</button>
           </div>
         </div>
 
-        <div id="reporteServiciosContainer"></div>
+        <!-- Maintenance Report Card -->
+        <div class="card hover-lift" onclick="app.showReporteMantenimiento()">
+          <div class="card-body text-center" style="padding: var(--spacing-xl);">
+            <div style="font-size: 3rem; margin-bottom: var(--spacing-md);">🛠️</div>
+            <h3 class="card-title">Eficiencia Operativa</h3>
+            <p class="text-tertiary">Reporte de mantenimientos realizados y carga de técnicos.</p>
+            <button class="btn btn-sm btn-ghost mt-md">Ver Reporte →</button>
+          </div>
+        </div>
       </div>
     </div>
   `;
-
-    this.populateReportFilters();
 };
 
-App.prototype.switchReportTab = function (tabName) {
-    // Update tab buttons
-    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-    event.target.classList.add('active');
-
-    // Update tab content
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-    document.getElementById(`tab-${tabName}`).classList.add('active');
-};
-
-App.prototype.populateReportFilters = function () {
-    const contratos = db.getData('contratos');
-
-    // Populate contract filters
-    const contratoFilters = [
-        document.getElementById('reportContratoFilter'),
-        document.getElementById('reportEquiposContrato')
-    ];
-
-    contratoFilters.forEach(select => {
-        if (select && select.options.length === 1) {
-            contratos.forEach(contrato => {
-                const option = document.createElement('option');
-                option.value = contrato.id;
-                option.textContent = `${contrato.numero_contrato} - ${db.getById('clientes', contrato.cliente_id)?.nombre || 'N/A'}`;
-                select.appendChild(option);
-            });
-        }
-    });
-
-    // Set default date range (last 3 months)
-    const now = new Date();
-    const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-    const fechaDesde = document.getElementById('reportFechaDesde');
-    if (fechaDesde) {
-        fechaDesde.value = `${threeMonthsAgo.getFullYear()}-${String(threeMonthsAgo.getMonth() + 1).padStart(2, '0')}`;
-    }
-};
-
-App.prototype.generateConsumoReport = function () {
-    const contratoId = document.getElementById('reportContratoFilter')?.value;
-    const fechaDesde = document.getElementById('reportFechaDesde')?.value;
-    const fechaHasta = document.getElementById('reportFechaHasta')?.value;
-
-    if (!fechaDesde || !fechaHasta) {
-        showToast('Por favor seleccione el rango de fechas', 'warning');
-        return;
-    }
-
-    const equipos = contratoId ?
-        db.getBy('equipos', 'contrato_id', parseInt(contratoId)) :
-        db.getData('equipos');
-
-    const contadores = db.getData('contadores_equipos');
-    const modelos = db.getData('modelos');
-    const marcas = db.getData('marcas');
-    const contratos = db.getData('contratos');
-    const tarifas = db.getData('tarifas_contrato');
-
-    // Filter counters by date range
-    const [yearDesde, monthDesde] = fechaDesde.split('-').map(Number);
-    const [yearHasta, monthHasta] = fechaHasta.split('-').map(Number);
-
-    const filteredContadores = contadores.filter(c => {
-        const fecha = new Date(c.fecha_lectura);
-        const year = fecha.getFullYear();
-        const month = fecha.getMonth() + 1;
-
-        const dateValue = year * 100 + month;
-        const desdeValue = yearDesde * 100 + monthDesde;
-        const hastaValue = yearHasta * 100 + monthHasta;
-
-        return dateValue >= desdeValue && dateValue <= hastaValue;
-    });
-
-    // Group by equipment and calculate totals
-    const reportData = [];
-    let totalConsumo = 0;
-    let totalValor = 0;
-
-    equipos.forEach(equipo => {
-        const equipoContadores = filteredContadores.filter(c => c.equipo_id === equipo.id);
-        const consumoTotal = equipoContadores.reduce((sum, c) => sum + c.consumo, 0);
-
-        if (consumoTotal > 0 || equipoContadores.length > 0) {
-            const modelo = modelos.find(m => m.id === equipo.modelo_id);
-            const marca = modelo ? marcas.find(m => m.id === modelo.marca_id) : null;
-            const contrato = contratos.find(c => c.id === equipo.contrato_id);
-
-            // Get tariff (simplified - using first tariff)
-            const tarifa = tarifas.find(t => t.contrato_id === equipo.contrato_id);
-            const valorUnitario = tarifa ? tarifa.valor_unitario : 5; // Default $5 per page
-            const valorTotal = consumoTotal * valorUnitario;
-
-            reportData.push({
-                equipo,
-                modelo,
-                marca,
-                contrato,
-                consumo: consumoTotal,
-                valor: valorTotal,
-                lecturas: equipoContadores.length
-            });
-
-            totalConsumo += consumoTotal;
-            totalValor += valorTotal;
-        }
-    });
-
-    // Render report
-    const container = document.getElementById('reporteConsumoContainer');
-    container.innerHTML = `
-    <div class="card" style="margin-top: var(--spacing-lg);">
-      <div class="card-header">
-        <h3 class="card-title">Reporte de Consumo Mensual</h3>
-        <div style="display: flex; gap: var(--spacing-sm);">
-          <button class="btn btn-sm btn-secondary" onclick="app.exportReportPDF()">
-            <span>📄</span>
-            <span>PDF</span>
-          </button>
-          <button class="btn btn-sm btn-secondary" onclick="app.exportReportExcel()">
-            <span>📊</span>
-            <span>Excel</span>
-          </button>
+App.prototype.showReporteConsumibles = function () {
+  const content = `
+    <div class="filters-container mb-lg">
+      <div class="filters-grid">
+        <div class="form-group m-0">
+          <label class="form-label">Desde</label>
+          <input type="date" class="form-input" id="repConsInicio">
+        </div>
+        <div class="form-group m-0">
+          <label class="form-label">Hasta</label>
+          <input type="date" class="form-input" id="repConsFin" value="${getCurrentDate()}">
+        </div>
+        <div class="form-group m-0">
+          <label class="form-label">Contrato</label>
+          <select class="form-select" id="repConsContrato">
+            <option value="">Todos los contratos</option>
+            ${db.getData('contratos').map(c => `<option value="${c.id}">${c.numero_contrato}</option>`).join('')}
+          </select>
         </div>
       </div>
-      
-      <div style="padding: var(--spacing-lg); background: rgba(59, 130, 246, 0.1); border-radius: var(--radius-md); margin: var(--spacing-lg);">
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-lg); text-align: center;">
-          <div>
-            <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); margin-bottom: var(--spacing-xs);">PERÍODO</div>
-            <div style="font-size: var(--font-size-lg); font-weight: bold;">${getMonthName(monthDesde)} ${yearDesde} - ${getMonthName(monthHasta)} ${yearHasta}</div>
-          </div>
-          <div>
-            <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); margin-bottom: var(--spacing-xs);">CONSUMO TOTAL</div>
-            <div style="font-size: var(--font-size-2xl); font-weight: bold; color: var(--color-success);">${formatNumber(totalConsumo)}</div>
-            <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">páginas</div>
-          </div>
-          <div>
-            <div style="font-size: var(--font-size-xs); color: var(--color-text-tertiary); margin-bottom: var(--spacing-xs);">VALOR TOTAL</div>
-            <div style="font-size: var(--font-size-2xl); font-weight: bold; color: var(--color-primary);">${formatCurrency(totalValor)}</div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="table-container">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Equipo</th>
-              <th>Marca</th>
-              <th>Modelo</th>
-              <th>N° Serie</th>
-              <th>Contrato</th>
-              <th>Ubicación</th>
-              <th>Lecturas</th>
-              <th>Consumo</th>
-              <th>Valor</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${reportData.map(item => `
-              <tr>
-                <td>🖨️ ${item.modelo?.nombre || 'N/A'}</td>
-                <td>${item.marca?.nombre || '-'}</td>
-                <td>${item.modelo?.nombre || '-'}</td>
-                <td><code>${item.equipo.numero_serie}</code></td>
-                <td>${item.contrato?.numero_contrato || '-'}</td>
-                <td>${item.equipo.ubicacion || '-'}</td>
-                <td>${item.lecturas}</td>
-                <td><strong>${formatNumber(item.consumo)}</strong></td>
-                <td>${formatCurrency(item.valor)}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-          <tfoot>
-            <tr style="background: var(--color-bg-tertiary); font-weight: bold;">
-              <td colspan="7" style="text-align: right;">TOTALES:</td>
-              <td><strong>${formatNumber(totalConsumo)}</strong></td>
-              <td><strong>${formatCurrency(totalValor)}</strong></td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+    </div>
+    <div id="reporteConsResult" class="table-container">
+      <p class="text-center text-tertiary py-xl">Seleccione filtros para generar el reporte</p>
     </div>
   `;
 
-    if (reportData.length === 0) {
-        container.innerHTML = `
-      <div class="empty-state" style="margin-top: var(--spacing-xl);">
-        <div class="empty-state-icon">📊</div>
-        <div class="empty-state-title">Sin datos para mostrar</div>
-        <div class="empty-state-description">No hay consumo registrado en el período seleccionado</div>
-      </div>
+  const modal = createModal('Reporte de Consumo de Suministros', content, [
+    { text: 'Cerrar', class: 'btn-secondary', onClick: () => closeModal(modal) },
+    { text: '🖨️ Imprimir PDF', class: 'btn-ghost', onClick: () => window.print() },
+    { text: '📊 Generar', class: 'btn-primary', onClick: () => this.generarDataReporteConsumibles() }
+  ], 'xl');
+
+  document.body.appendChild(modal);
+  setTimeout(() => modal.classList.add('active'), 10);
+};
+
+App.prototype.generarDataReporteConsumibles = function () {
+  const inicio = document.getElementById('repConsInicio').value;
+  const fin = document.getElementById('repConsFin').value;
+  const contratoId = document.getElementById('repConsContrato').value;
+  const resultDiv = document.getElementById('reporteConsResult');
+
+  const movimientos = db.getData('movimientos_bodega').filter(m =>
+    m.tipo === 'salida' &&
+    (!inicio || m.fecha >= inicio) &&
+    (!fin || m.fecha <= fin)
+  );
+
+  const suministros = db.getData('suministros');
+  const equipos = db.getData('equipos');
+
+  let html = `
+    <table class="table table-sm">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Suministro</th>
+          <th>Equipo / Serie</th>
+          <th>Cantidad</th>
+          <th>Técnico</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  let totalItems = 0;
+  movimientos.forEach(mov => {
+    const sum = suministros.find(s => s.id === mov.suministro_id);
+    const eq = equipos.find(e => e.id === mov.equipo_id);
+
+    // Filter by contract if selected
+    if (contratoId && (!eq || eq.contrato_id != contratoId)) return;
+
+    totalItems += mov.cantidad;
+    html += `
+      <tr>
+        <td>${formatDate(mov.fecha)}</td>
+        <td><strong>${sum ? sum.nombre : 'N/A'}</strong><br><small>${sum ? sum.codigo : '-'}</small></td>
+        <td>${eq ? eq.numero_serie : 'Salida General'}</td>
+        <td>${mov.cantidad}</td>
+        <td>${mov.usuario_id || 'Admin'}</td>
+      </tr>
     `;
-    }
+  });
+
+  html += `
+      </tbody>
+      <tfoot>
+        <tr style="background: var(--color-bg-tertiary);">
+          <td colspan="3" class="text-right font-bold">Total Consumido:</td>
+          <td colspan="2" class="font-bold">${totalItems} unidades</td>
+        </tr>
+      </tfoot>
+    </table>
+  `;
+
+  resultDiv.innerHTML = html;
 };
 
-App.prototype.generateEquiposReport = function () {
-    const contratoId = document.getElementById('reportEquiposContrato')?.value;
-
-    if (!contratoId) {
-        showToast('Por favor seleccione un contrato', 'warning');
-        return;
-    }
-
-    const contrato = db.getById('contratos', contratoId);
-    const cliente = db.getById('clientes', contrato.cliente_id);
-    const equipos = db.getBy('equipos', 'contrato_id', parseInt(contratoId));
-    const modelos = db.getData('modelos');
-    const marcas = db.getData('marcas');
-    const contadores = db.getData('contadores_equipos');
-
-    const container = document.getElementById('reporteEquiposContainer');
-    container.innerHTML = `
-    <div class="card" style="margin-top: var(--spacing-lg);">
-      <div class="card-header">
-        <h3 class="card-title">Equipos por Contrato</h3>
-        <button class="btn btn-sm btn-secondary" onclick="app.exportReportPDF()">
-          <span>📄</span>
-          <span>Exportar PDF</span>
-        </button>
-      </div>
-      
-      <div style="padding: var(--spacing-lg); background: var(--color-surface); border-radius: var(--radius-md); margin: var(--spacing-lg);">
-        <h4 style="margin-bottom: var(--spacing-md);">Información del Contrato</h4>
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-md);">
-          <div>
-            <strong>Cliente:</strong> ${cliente.nombre}<br>
-            <strong>N° Contrato:</strong> ${contrato.numero_contrato}<br>
-            <strong>Estado:</strong> ${getStatusBadge(contrato.estado)}
-          </div>
-          <div>
-            <strong>Período:</strong> ${formatDate(contrato.fecha_inicio)} - ${formatDate(contrato.fecha_fin)}<br>
-            <strong>Total Equipos:</strong> ${equipos.length}<br>
-            <strong>Valor Contrato:</strong> ${formatCurrency(contrato.valor_total)}
-          </div>
+App.prototype.showReporteContratos = function () {
+  const content = `
+    <div class="filters-container mb-lg">
+      <div class="filters-grid">
+        <div class="form-group m-0"><label class="form-label">Estado</label>
+          <select class="form-select" id="repContrEstado">
+            <option value="">Todos</option>
+            <option value="vigente">Vigente</option>
+            <option value="vencido">Vencido</option>
+            <option value="cerrado">Cerrado</option>
+          </select>
+        </div>
+        <div class="form-group m-0"><label class="form-label">Cliente</label>
+          <select class="form-select" id="repContrCliente">
+            <option value="">Todos los clientes</option>
+            ${db.getData('clientes').map(c => `<option value="${c.id}">${c.nombre}</option>`).join('')}
+          </select>
         </div>
       </div>
-      
-      <div class="table-container">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Equipo</th>
-              <th>Marca</th>
-              <th>Modelo</th>
-              <th>N° Serie</th>
-              <th>Estado</th>
-              <th>Ubicación</th>
-              <th>Fecha Instalación</th>
-              <th>Consumo Acumulado</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${equipos.map(equipo => {
-        const modelo = modelos.find(m => m.id === equipo.modelo_id);
-        const marca = modelo ? marcas.find(m => m.id === modelo.marca_id) : null;
-        const equipoContadores = contadores.filter(c => c.equipo_id === equipo.id);
-        const consumoTotal = equipoContadores.reduce((sum, c) => sum + c.consumo, 0);
+    </div>
+    <div id="reporteContrResult" class="table-container"></div>
+  `;
 
-        return `
-                <tr>
-                  <td>🖨️ ${modelo?.nombre || 'N/A'}</td>
-                  <td>${marca?.nombre || '-'}</td>
-                  <td>${modelo?.nombre || '-'}</td>
-                  <td><code>${equipo.numero_serie}</code></td>
-                  <td>${getStatusBadge(equipo.estado)}</td>
-                  <td>${equipo.ubicacion || '-'}</td>
-                  <td>${formatDate(equipo.fecha_instalacion)}</td>
-                  <td><strong>${formatNumber(consumoTotal)}</strong> páginas</td>
-                </tr>
-              `;
-    }).join('')}
-          </tbody>
-        </table>
+  const modal = createModal('Reporte Resumen de Contratos', content, [
+    { text: 'Cerrar', class: 'btn-secondary', onClick: () => closeModal(modal) },
+    { text: '📥 Exportar CSV', class: 'btn-ghost', onClick: () => this.exportToCSV('tableContratos', 'reporte_contratos') },
+    { text: '📊 Generar', class: 'btn-primary', onClick: () => this.generarDataReporteContratos() }
+  ], 'xl');
+
+  document.body.appendChild(modal);
+  setTimeout(() => {
+    modal.classList.add('active');
+    this.generarDataReporteContratos();
+  }, 10);
+};
+
+App.prototype.generarDataReporteContratos = function () {
+  const estado = document.getElementById('repContrEstado').value;
+  const clienteId = document.getElementById('repContrCliente').value;
+  const contratos = db.getData('contratos').filter(c =>
+    (!estado || c.estado === estado) &&
+    (!clienteId || c.cliente_id == clienteId)
+  );
+  const clientes = db.getData('clientes');
+  const resultDiv = document.getElementById('reporteContrResult');
+
+  let html = `
+    <table class="table" id="tableContratos">
+      <thead>
+        <tr>
+          <th>N° Contrato</th>
+          <th>Cliente</th>
+          <th>Fecha Inicio</th>
+          <th>Fecha Fin</th>
+          <th>Valor Total</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${contratos.map(c => {
+    const cliente = clientes.find(cl => cl.id == c.cliente_id);
+    return `
+            <tr>
+              <td><strong>${c.numero_contrato}</strong></td>
+              <td>${cliente ? cliente.nombre : 'N/A'}</td>
+              <td>${formatDate(c.fecha_inicio)}</td>
+              <td>${formatDate(c.fecha_fin)}</td>
+              <td>${formatCurrency(c.valor_total || 0)}</td>
+              <td><span class="badge badge-${c.estado === 'vigente' ? 'success' : 'danger'}">${c.estado.toUpperCase()}</span></td>
+            </tr>
+          `;
+  }).join('')}
+      </tbody>
+    </table>
+  `;
+  resultDiv.innerHTML = html;
+};
+
+App.prototype.showReporteContadoresContrato = function () {
+  const content = `
+    <div class="filters-container mb-lg">
+      <div class="filters-grid">
+        <div class="form-group m-0"><label class="form-label">Desde</label>
+          <input type="date" class="form-input" id="repContadInicio">
+        </div>
+        <div class="form-group m-0"><label class="form-label">Hasta</label>
+          <input type="date" class="form-input" id="repContadFin" value="${getCurrentDate()}">
+        </div>
+        <div class="form-group m-0"><label class="form-label">Contrato/Proyecto</label>
+          <select class="form-select" id="repContadContrato">
+            <option value="">Todos los contratos</option>
+            ${db.getData('contratos').map(c => `<option value="${c.id}">${c.numero_contrato}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>
+    <div id="reporteContadResult" class="table-container">
+      <p class="text-center text-tertiary py-xl">Defina los filtros para mostrar lecturas</p>
+    </div>
+  `;
+
+  const modal = createModal('Reporte de Lecturas por Contrato', content, [
+    { text: 'Cerrar', class: 'btn-secondary', onClick: () => closeModal(modal) },
+    { text: '📥 CSV', class: 'btn-ghost', onClick: () => this.exportToCSV('tableContadores', 'reporte_lecturas') },
+    { text: '📊 Generar', class: 'btn-primary', onClick: () => this.generarDataReporteContadores() }
+  ], 'xl');
+
+  document.body.appendChild(modal);
+  setTimeout(() => modal.classList.add('active'), 10);
+};
+
+App.prototype.generarDataReporteContadores = function () {
+  const inicio = document.getElementById('repContadInicio').value;
+  const fin = document.getElementById('repContadFin').value;
+  const contratoId = document.getElementById('repContadContrato').value;
+  const resultDiv = document.getElementById('reporteContadResult');
+
+  const lecturas = db.getData('contadores_equipos').filter(l =>
+    (!inicio || l.fecha_lectura >= inicio) &&
+    (!fin || l.fecha_lectura <= fin)
+  );
+  const equipos = db.getData('equipos');
+  const modelos = db.getData('modelos');
+  const contratos = db.getData('contratos');
+
+  let html = `
+    <table class="table table-sm" id="tableContadores">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Contrato</th>
+          <th>Equipo / Serie</th>
+          <th>Lectura Anterior</th>
+          <th>Lectura Actual</th>
+          <th>Consumo</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  let totalConsumo = 0;
+  lecturas.forEach(l => {
+    const eq = equipos.find(e => e.id == l.equipo_id);
+    if (!eq) return;
+    const cont = contratos.find(c => c.id == eq.contrato_id);
+    if (contratoId && eq.contrato_id != contratoId) return;
+
+    totalConsumo += l.consumo || 0;
+    const mod = modelos.find(m => m.id == eq.modelo_id);
+
+    html += `
+      <tr>
+        <td>${formatDate(l.fecha_lectura)}</td>
+        <td>${cont ? cont.numero_contrato : 'N/A'}</td>
+        <td><strong>${mod ? mod.nombre : '-'}</strong> (${eq.numero_serie})</td>
+        <td>${l.lectura_anterior || 0}</td>
+        <td>${l.valor}</td>
+        <td class="font-bold">${l.consumo || 0}</td>
+      </tr>
+    `;
+  });
+
+  html += `
+      </tbody>
+      <tfoot>
+        <tr style="background: var(--color-bg-tertiary);">
+          <td colspan="5" class="text-right font-bold">Total Consumo Periodo:</td>
+          <td class="font-bold text-primary">${totalConsumo}</td>
+        </tr>
+      </tfoot>
+    </table>
+  `;
+  resultDiv.innerHTML = html;
+};
+
+App.prototype.showReporteMantenimiento = function () {
+  const content = `
+    <div class="filters-container mb-lg">
+      <div class="filters-grid">
+        <div class="form-group m-0"><label class="form-label">Tipo</label>
+          <select class="form-select" id="repMantTipo">
+            <option value="">Todos</option>
+            <option value="preventivo">Preventivo</option>
+            <option value="correctivo">Correctivo</option>
+          </select>
+        </div>
+        <div class="form-group m-0"><label class="form-label">Técnico</label>
+          <select class="form-select" id="repMantTec">
+            <option value="">Cualquiera</option>
+            ${db.getData('usuarios').filter(u => u.perfil_id === 3).map(u => `<option value="${u.id}">${u.nombre}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>
+    <div id="reporteMantResult">
+      <div style="height: 300px; display: flex; align-items: center; justify-content: center; background: var(--color-bg-tertiary); border-radius: var(--radius-lg);">
+        <p class="text-tertiary">El gráfico de eficiencia se generará aquí</p>
       </div>
     </div>
   `;
+
+  const modal = createModal('Eficiencia Operativa (Técnicos)', content, [
+    { text: 'Cerrar', class: 'btn-secondary', onClick: () => closeModal(modal) },
+    { text: '📊 Analizar Carga', class: 'btn-primary', onClick: () => showToast('Analizando datos históricos...', 'info') }
+  ], 'lg');
+
+  document.body.appendChild(modal);
+  setTimeout(() => modal.classList.add('active'), 10);
 };
 
-App.prototype.generateServiciosReport = function () {
-    showToast('Reporte de servicios en desarrollo', 'info');
-};
+// Global export helper
+App.prototype.exportToCSV = function (tableId, filename) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
 
-App.prototype.exportReportPDF = function () {
-    showToast('Exportación a PDF en desarrollo', 'info');
-};
+  let csv = [];
+  const rows = table.querySelectorAll('tr');
 
-App.prototype.exportReportExcel = function () {
-    showToast('Exportación a Excel en desarrollo', 'info');
+  for (const row of rows) {
+    const cols = row.querySelectorAll('td, th');
+    let rowData = [];
+    for (const col of cols) {
+      rowData.push('"' + col.innerText.replace(/"/g, '""') + '"');
+    }
+    csv.push(rowData.join(','));
+  }
+
+  const csvContent = "data:text/csv;charset=utf-8," + csv.join("\n");
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", filename + ".csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 };

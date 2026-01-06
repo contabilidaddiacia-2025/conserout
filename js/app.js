@@ -4,123 +4,190 @@
  */
 
 class App {
-    constructor() {
-        this.currentModule = null;
-        this.modules = {};
-        this.init();
+  constructor() {
+    this.currentModule = null;
+    this.modules = {};
+    this.init();
+  }
+
+  init() {
+    // Check authentication
+    if (!auth.requireAuth()) {
+      return;
     }
 
-    init() {
-        // Check authentication
-        if (!auth.requireAuth()) {
-            return;
+    // Load user info
+    this.loadUserInfo();
+
+    // Setup navigation
+    this.setupNavigation();
+
+    // Setup logout
+    this.setupLogout();
+
+    // Filter menu by permissions
+    this.filterMenuByPermissions();
+  }
+
+  loadUserInfo() {
+    const user = auth.getCurrentUser();
+    if (user) {
+      const initials = user.nombre.split(' ').map(n => n[0]).join('').substring(0, 2);
+      const avatarEl = document.getElementById('userAvatar');
+      const nameEl = document.getElementById('userName');
+      const roleEl = document.getElementById('userRole');
+
+      if (avatarEl) avatarEl.textContent = initials;
+      if (nameEl) nameEl.textContent = user.nombre;
+      if (roleEl) roleEl.textContent = user.perfil.nombre;
+    }
+  }
+
+  setupNavigation() {
+    // Handle nav item clicks
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        // Update active state
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        item.classList.add('active');
+
+        // Get module name
+        const module = item.getAttribute('data-module');
+        if (module) {
+          this.loadModule(module);
         }
+      });
+    });
+  }
 
-        // Load user info
-        this.loadUserInfo();
+  setupLogout() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        showConfirm(
+          'Cerrar Sesión',
+          '¿Estás seguro que deseas cerrar sesión?',
+          () => auth.logout()
+        );
+      });
+    }
+  }
 
-        // Setup navigation
-        this.setupNavigation();
+  loadModule(moduleName) {
+    const contentArea = document.querySelector('.content-area');
+    if (!contentArea) return;
 
-        // Setup logout
-        this.setupLogout();
+    // Validate permissions
+    if (!this.hasPermission(moduleName)) {
+      showToast('No tienes permisos para acceder a este módulo', 'danger');
+      return;
     }
 
-    loadUserInfo() {
-        const user = auth.getCurrentUser();
-        if (user) {
-            const initials = user.nombre.split(' ').map(n => n[0]).join('').substring(0, 2);
-            const avatarEl = document.getElementById('userAvatar');
-            const nameEl = document.getElementById('userName');
-            const roleEl = document.getElementById('userRole');
-
-            if (avatarEl) avatarEl.textContent = initials;
-            if (nameEl) nameEl.textContent = user.nombre;
-            if (roleEl) roleEl.textContent = user.perfil.nombre;
-        }
+    // Update page title
+    const topbarTitle = document.querySelector('.topbar-title h1');
+    if (topbarTitle) {
+      topbarTitle.textContent = this.getModuleTitle(moduleName);
     }
 
-    setupNavigation() {
-        // Handle nav item clicks
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-
-                // Update active state
-                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-                item.classList.add('active');
-
-                // Get module name
-                const module = item.getAttribute('data-module');
-                if (module) {
-                    this.loadModule(module);
-                }
-            });
-        });
+    // Load module content
+    switch (moduleName) {
+      case 'contratos':
+        this.loadContratosModule(contentArea);
+        break;
+      case 'clientes':
+        this.loadClientesModule(contentArea);
+        break;
+      case 'equipos-gestion':
+        this.loadEquiposModule(contentArea);
+        break;
+      case 'bodega':
+        this.loadBodegaModule(contentArea);
+        break;
+      case 'contadores':
+        this.loadContadoresModule(contentArea);
+        break;
+      case 'marcas':
+        this.loadMarcasModule(contentArea);
+        break;
+      case 'modelos':
+        this.loadModelosModule(contentArea);
+        break;
+      case 'usuarios':
+        this.loadUsuariosModule(contentArea);
+        break;
+      case 'cambio-consumibles':
+        this.loadCambioConsumiblesModule(contentArea);
+        break;
+      case 'instalaciones':
+        this.loadInstalacionesModule(contentArea);
+        break;
+      case 'mantenimientos':
+        this.loadMantenimientosModule(contentArea);
+        break;
+      case 'reportes':
+        this.loadReportesModule(contentArea);
+        break;
+      case 'notificaciones':
+        this.loadNotificacionesModule(contentArea);
+        break;
+      case 'dashboard':
+        this.loadDashboardModule(contentArea);
+        break;
+      case 'cobros':
+        this.loadCobrosModule(contentArea);
+        break;
+      case 'materiales':
+        this.loadMaterialesModule(contentArea);
+        break;
+      case 'tipos-equipo':
+      case 'tipos-impresion':
+      case 'tamanos-impresion':
+      case 'tipos-mantenimiento':
+      case 'tipos-suministro':
+      case 'departamentos':
+        this.loadConfiguracionModule(contentArea, moduleName);
+        break;
+      case 'tecnicos-tarifas':
+        this.loadTecnicosTarifasModule(contentArea);
+        break;
+      default:
+        showToast(`Módulo "${moduleName}" en desarrollo`, 'info');
     }
+  }
 
-    setupLogout() {
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                showConfirm(
-                    'Cerrar Sesión',
-                    '¿Estás seguro que deseas cerrar sesión?',
-                    () => auth.logout()
-                );
-            });
-        }
-    }
+  getModuleTitle(moduleName) {
+    const titles = {
+      'contratos': 'Gestión de Contratos',
+      'clientes': 'Gestión de Clientes',
+      'equipos-gestion': 'Gestión de Equipos',
+      'bodega': 'Gestión de Bodega',
+      'contadores': 'Registro de Contadores',
+      'marcas': 'Gestión de Marcas',
+      'modelos': 'Gestión de Modelos',
+      'usuarios': 'Gestión de Usuarios',
+      'cambio-consumibles': 'Cambio de Consumibles',
+      'instalaciones': 'Instalaciones de Equipos',
+      'mantenimientos': 'Mantenimientos',
+      'reportes': 'Reportes y Análisis',
+      'notificaciones': 'Avisos y Notificaciones',
+      'tipos-equipo': 'Tipos de Equipo',
+      'tipos-impresion': 'Tipos de Impresión',
+      'tamanos-impresion': 'Tamaños de Impresión',
+      'tipos-mantenimiento': 'Tipos de Mantenimiento',
+      'tipos-suministro': 'Tipos de Suministro',
+      'departamentos': 'Gestión de Departamentos',
+      'tecnicos-tarifas': 'Técnicos y Tarifas',
+      'cobros': 'Facturación y Cobros',
+      'materiales': 'Asignación de Materiales',
+      'dashboard': 'Resumen'
+    };
+    return titles[moduleName] || 'Dashboard';
+  }
 
-    loadModule(moduleName) {
-        const contentArea = document.querySelector('.content-area');
-        if (!contentArea) return;
-
-        // Update page title
-        const topbarTitle = document.querySelector('.topbar-title h1');
-        if (topbarTitle) {
-            topbarTitle.textContent = this.getModuleTitle(moduleName);
-        }
-
-        // Load module content
-        switch (moduleName) {
-            case 'contratos':
-                this.loadContratosModule(contentArea);
-                break;
-            case 'clientes':
-                this.loadClientesModule(contentArea);
-                break;
-            case 'equipos-gestion':
-                this.loadEquiposModule(contentArea);
-                break;
-            case 'contadores':
-                this.loadContadoresModule(contentArea);
-                break;
-            case 'bodega':
-                this.loadBodegaModule(contentArea);
-                break;
-            case 'reportes':
-                this.loadReportesModule(contentArea);
-                break;
-            default:
-                showToast(`Módulo "${moduleName}" en desarrollo`, 'info');
-        }
-    }
-
-    getModuleTitle(moduleName) {
-        const titles = {
-            'contratos': 'Gestión de Contratos',
-            'clientes': 'Gestión de Clientes',
-            'equipos-gestion': 'Gestión de Equipos',
-            'contadores': 'Registro de Contadores',
-            'bodega': 'Gestión de Bodega',
-            'reportes': 'Reportes y Análisis'
-        };
-        return titles[moduleName] || 'Dashboard';
-    }
-
-    loadContratosModule(container) {
-        container.innerHTML = `
+  loadContratosModule(container) {
+    container.innerHTML = `
       <div class="module-container">
         <div class="module-header">
           <h2 class="module-title">Gestión de Contratos</h2>
@@ -175,37 +242,37 @@ class App {
       </div>
     `;
 
-        this.renderContratosTable();
-        this.setupContratosFilters();
+    this.renderContratosTable();
+    this.setupContratosFilters();
+  }
+
+  renderContratosTable() {
+    const contratos = db.getData('contratos');
+    const clientes = db.getData('clientes');
+    const equipos = db.getData('equipos');
+    const tbody = document.getElementById('contratosTableBody');
+
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    // Populate cliente filter
+    const filterCliente = document.getElementById('filterCliente');
+    if (filterCliente && filterCliente.options.length === 1) {
+      clientes.forEach(cliente => {
+        const option = document.createElement('option');
+        option.value = cliente.id;
+        option.textContent = cliente.nombre;
+        filterCliente.appendChild(option);
+      });
     }
 
-    renderContratosTable() {
-        const contratos = db.getData('contratos');
-        const clientes = db.getData('clientes');
-        const equipos = db.getData('equipos');
-        const tbody = document.getElementById('contratosTableBody');
+    contratos.forEach(contrato => {
+      const cliente = clientes.find(c => c.id === contrato.cliente_id);
+      const equiposContrato = equipos.filter(e => e.contrato_id === contrato.id);
 
-        if (!tbody) return;
-
-        tbody.innerHTML = '';
-
-        // Populate cliente filter
-        const filterCliente = document.getElementById('filterCliente');
-        if (filterCliente && filterCliente.options.length === 1) {
-            clientes.forEach(cliente => {
-                const option = document.createElement('option');
-                option.value = cliente.id;
-                option.textContent = cliente.nombre;
-                filterCliente.appendChild(option);
-            });
-        }
-
-        contratos.forEach(contrato => {
-            const cliente = clientes.find(c => c.id === contrato.cliente_id);
-            const equiposContrato = equipos.filter(e => e.contrato_id === contrato.id);
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
         <td><strong>${contrato.numero_contrato}</strong></td>
         <td>${cliente ? cliente.nombre : '-'}</td>
         <td>${formatDate(contrato.fecha_inicio)}</td>
@@ -227,43 +294,43 @@ class App {
           </div>
         </td>
       `;
-            tbody.appendChild(tr);
-        });
-    }
+      tbody.appendChild(tr);
+    });
+  }
 
-    setupContratosFilters() {
-        const searchInput = document.getElementById('searchContrato');
-        const filterEstado = document.getElementById('filterEstado');
-        const filterCliente = document.getElementById('filterCliente');
+  setupContratosFilters() {
+    const searchInput = document.getElementById('searchContrato');
+    const filterEstado = document.getElementById('filterEstado');
+    const filterCliente = document.getElementById('filterCliente');
 
-        const applyFilters = () => {
-            const search = searchInput?.value.toLowerCase() || '';
-            const estado = filterEstado?.value || '';
-            const clienteId = filterCliente?.value || '';
+    const applyFilters = () => {
+      const search = searchInput?.value.toLowerCase() || '';
+      const estado = filterEstado?.value || '';
+      const clienteId = filterCliente?.value || '';
 
-            const rows = document.querySelectorAll('#contratosTableBody tr');
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                const estadoBadge = row.querySelector('.badge');
-                const rowEstado = estadoBadge?.textContent.toLowerCase() || '';
+      const rows = document.querySelectorAll('#contratosTableBody tr');
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const estadoBadge = row.querySelector('.badge');
+        const rowEstado = estadoBadge?.textContent.toLowerCase() || '';
 
-                const matchesSearch = text.includes(search);
-                const matchesEstado = !estado || rowEstado.includes(estado);
+        const matchesSearch = text.includes(search);
+        const matchesEstado = !estado || rowEstado.includes(estado);
 
-                row.style.display = (matchesSearch && matchesEstado) ? '' : 'none';
-            });
-        };
+        row.style.display = (matchesSearch && matchesEstado) ? '' : 'none';
+      });
+    };
 
-        searchInput?.addEventListener('input', debounce(applyFilters, 300));
-        filterEstado?.addEventListener('change', applyFilters);
-        filterCliente?.addEventListener('change', applyFilters);
-    }
+    searchInput?.addEventListener('input', debounce(applyFilters, 300));
+    filterEstado?.addEventListener('change', applyFilters);
+    filterCliente?.addEventListener('change', applyFilters);
+  }
 
-    showContratoForm(contratoId = null) {
-        const contrato = contratoId ? db.getById('contratos', contratoId) : null;
-        const clientes = db.getData('clientes');
+  showContratoForm(contratoId = null) {
+    const contrato = contratoId ? db.getById('contratos', contratoId) : null;
+    const clientes = db.getData('clientes');
 
-        const formHTML = `
+    const formHTML = `
       <form id="contratoForm">
         <div class="form-group">
           <label class="form-label required">Cliente</label>
@@ -318,64 +385,64 @@ class App {
       </form>
     `;
 
-        const modal = createModal(
-            contratoId ? 'Editar Contrato' : 'Nuevo Contrato',
-            formHTML,
-            [
-                {
-                    text: 'Cancelar',
-                    class: 'btn-secondary',
-                    onClick: () => closeModal(modal)
-                },
-                {
-                    text: contratoId ? 'Actualizar' : 'Crear',
-                    class: 'btn-primary',
-                    onClick: () => this.saveContrato(contratoId, modal)
-                }
-            ]
-        );
+    const modal = createModal(
+      contratoId ? 'Editar Contrato' : 'Nuevo Contrato',
+      formHTML,
+      [
+        {
+          text: 'Cancelar',
+          class: 'btn-secondary',
+          onClick: () => closeModal(modal)
+        },
+        {
+          text: contratoId ? 'Actualizar' : 'Crear',
+          class: 'btn-primary',
+          onClick: () => this.saveContrato(contratoId, modal)
+        }
+      ]
+    );
 
-        document.body.appendChild(modal);
-        setTimeout(() => modal.classList.add('active'), 10);
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('active'), 10);
+  }
+
+  saveContrato(contratoId, modal) {
+    const form = document.getElementById('contratoForm');
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
     }
 
-    saveContrato(contratoId, modal) {
-        const form = document.getElementById('contratoForm');
-        if (!form.checkValidity()) {
-            form.reportValidity();
-            return;
-        }
+    const formData = new FormData(form);
+    const data = {
+      cliente_id: parseInt(formData.get('cliente_id')),
+      numero_contrato: formData.get('numero_contrato'),
+      fecha_inicio: formData.get('fecha_inicio'),
+      fecha_fin: formData.get('fecha_fin'),
+      valor_total: parseFloat(formData.get('valor_total')),
+      descripcion: formData.get('descripcion'),
+      estado: formData.get('estado')
+    };
 
-        const formData = new FormData(form);
-        const data = {
-            cliente_id: parseInt(formData.get('cliente_id')),
-            numero_contrato: formData.get('numero_contrato'),
-            fecha_inicio: formData.get('fecha_inicio'),
-            fecha_fin: formData.get('fecha_fin'),
-            valor_total: parseFloat(formData.get('valor_total')),
-            descripcion: formData.get('descripcion'),
-            estado: formData.get('estado')
-        };
-
-        if (contratoId) {
-            db.update('contratos', contratoId, data);
-            showToast('Contrato actualizado exitosamente', 'success');
-        } else {
-            db.insert('contratos', data);
-            showToast('Contrato creado exitosamente', 'success');
-        }
-
-        closeModal(modal);
-        this.renderContratosTable();
+    if (contratoId) {
+      db.update('contratos', contratoId, data);
+      showToast('Contrato actualizado exitosamente', 'success');
+    } else {
+      db.insert('contratos', data);
+      showToast('Contrato creado exitosamente', 'success');
     }
 
-    viewContrato(id) {
-        const contrato = db.getById('contratos', id);
-        const cliente = db.getById('clientes', contrato.cliente_id);
-        const equipos = db.getBy('equipos', 'contrato_id', id);
-        const tarifas = db.getBy('tarifas_contrato', 'contrato_id', id);
+    closeModal(modal);
+    this.renderContratosTable();
+  }
 
-        const content = `
+  viewContrato(id) {
+    const contrato = db.getById('contratos', id);
+    const cliente = db.getById('clientes', contrato.cliente_id);
+    const equipos = db.getBy('equipos', 'contrato_id', id);
+    const tarifas = db.getBy('tarifas_contrato', 'contrato_id', id);
+
+    const content = `
       <div style="display: grid; gap: var(--spacing-lg);">
         <div class="detail-section">
           <h4 class="detail-section-title">Información General</h4>
@@ -445,67 +512,135 @@ class App {
       </div>
     `;
 
-        const modal = createModal('Detalles del Contrato', content, [
-            {
-                text: 'Cerrar',
-                class: 'btn-secondary',
-                onClick: () => closeModal(modal)
-            },
-            {
-                text: 'Editar',
-                class: 'btn-primary',
-                onClick: () => {
-                    closeModal(modal);
-                    this.showContratoForm(id);
-                }
-            }
-        ]);
+    const modal = createModal('Detalles del Contrato', content, [
+      {
+        text: 'Cerrar',
+        class: 'btn-secondary',
+        onClick: () => closeModal(modal)
+      },
+      {
+        text: 'Editar',
+        class: 'btn-primary',
+        onClick: () => {
+          closeModal(modal);
+          this.showContratoForm(id);
+        }
+      }
+    ]);
 
-        document.body.appendChild(modal);
-        setTimeout(() => modal.classList.add('active'), 10);
-    }
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('active'), 10);
+  }
 
-    editContrato(id) {
-        this.showContratoForm(id);
-    }
+  editContrato(id) {
+    this.showContratoForm(id);
+  }
 
-    deleteContrato(id) {
-        const contrato = db.getById('contratos', id);
-        showConfirm(
-            'Eliminar Contrato',
-            `¿Estás seguro que deseas eliminar el contrato ${contrato.numero_contrato}?`,
-            () => {
-                db.delete('contratos', id);
-                showToast('Contrato eliminado exitosamente', 'success');
-                this.renderContratosTable();
-            }
-        );
-    }
+  deleteContrato(id) {
+    const contrato = db.getById('contratos', id);
+    showConfirm(
+      'Eliminar Contrato',
+      `¿Estás seguro que deseas eliminar el contrato ${contrato.numero_contrato}?`,
+      () => {
+        db.delete('contratos', id);
+        showToast('Contrato eliminado exitosamente', 'success');
+        this.renderContratosTable();
+      }
+    );
+  }
 
-    // Placeholder methods for other modules
-    loadClientesModule(container) {
-        showToast('Módulo de Clientes en desarrollo', 'info');
-    }
+  // Placeholder methods for other modules
+  loadClientesModule(container) {
+    showToast('Módulo de Clientes en desarrollo', 'info');
+  }
 
-    loadEquiposModule(container) {
-        showToast('Módulo de Equipos en desarrollo', 'info');
-    }
+  loadEquiposModule(container) {
+    showToast('Módulo de Equipos en desarrollo', 'info');
+  }
 
-    loadContadoresModule(container) {
-        showToast('Módulo de Contadores en desarrollo', 'info');
-    }
+  loadContadoresModule(container) {
+    showToast('Módulo de Contadores en desarrollo', 'info');
+  }
 
-    loadBodegaModule(container) {
-        showToast('Módulo de Bodega en desarrollo', 'info');
-    }
+  loadBodegaModule(container) {
+    showToast('Módulo de Bodega en desarrollo', 'info');
+  }
 
-    loadReportesModule(container) {
-        showToast('Módulo de Reportes en desarrollo', 'info');
-    }
+  loadReportesModule(container) {
+    showToast('Módulo de Reportes en desarrollo', 'info');
+  }
+
+  // Permission system
+  hasPermission(moduleName) {
+    const user = auth.getCurrentUser();
+    if (!user || !user.perfil) return false;
+
+    const perfilNombre = user.perfil.nombre;
+
+    // Admin has access to everything
+    if (perfilNombre === 'Administrador') return true;
+
+    // Define module permissions
+    const MENU_PERMISSIONS = {
+      'equipos': ['Administrador'],
+      'usuarios': ['Administrador'],
+      'marcas': ['Administrador'],
+      'modelos': ['Administrador'],
+      'departamentos': ['Administrador'],
+      'tipos-equipo': ['Administrador'],
+      'tipos-impresion': ['Administrador'],
+      'tamanos-impresion': ['Administrador'],
+      'tipos-mantenimiento': ['Administrador'],
+      'tipos-suministro': ['Administrador'],
+      'clientes': ['Administrador', 'Gestor'],
+      'contratos': ['Administrador', 'Gestor'],
+      'equipos-gestion': ['Administrador', 'Gestor'],
+      'bodega': ['Administrador', 'Gestor'],
+      'cobros': ['Administrador', 'Gestor'],
+      'materiales': ['Administrador', 'Gestor'],
+      'tecnicos-tarifas': ['Administrador', 'Gestor'],
+      'contadores': ['Administrador', 'Gestor', 'Técnico'],
+      'cambio-consumibles': ['Administrador', 'Gestor', 'Técnico'],
+      'instalaciones': ['Administrador', 'Gestor', 'Técnico'],
+      'mantenimientos': ['Administrador', 'Gestor', 'Técnico'],
+      'reportes': ['Administrador', 'Gestor'],
+      'notificaciones': ['Administrador', 'Gestor', 'Técnico'],
+      'dashboard': ['Administrador', 'Gestor', 'Técnico']
+    };
+
+    const allowedProfiles = MENU_PERMISSIONS[moduleName];
+    if (!allowedProfiles) return false;
+
+    return allowedProfiles.includes(perfilNombre);
+  }
+
+  filterMenuByPermissions() {
+    const navItems = document.querySelectorAll('.nav-item[data-module]');
+    const navSections = document.querySelectorAll('.nav-section');
+
+    navItems.forEach(item => {
+      const module = item.getAttribute('data-module');
+      if (module && !this.hasPermission(module)) {
+        item.style.display = 'none';
+      } else {
+        item.style.display = '';
+      }
+    });
+
+    // Hide empty sections
+    navSections.forEach(section => {
+      const visibleItems = section.querySelectorAll('.nav-item[data-module]:not([style*="display: none"])');
+      if (visibleItems.length === 0) {
+        section.style.display = 'none';
+      } else {
+        section.style.display = '';
+      }
+    });
+  }
 }
 
 // Initialize app
 let app;
 document.addEventListener('DOMContentLoaded', () => {
-    app = new App();
+  app = new App();
 });
