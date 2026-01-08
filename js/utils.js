@@ -8,6 +8,11 @@
  */
 function formatDate(dateString) {
     if (!dateString) return '-';
+    // Parse strings YYYY-MM-DD manually to avoid timezone issues
+    if (typeof dateString === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dateString)) {
+        const [year, month, day] = dateString.substring(0, 10).split('-');
+        return `${day}/${month}/${year}`;
+    }
     const date = new Date(dateString);
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -21,14 +26,21 @@ function formatDate(dateString) {
 function formatDateInput(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 /**
- * Get current date in YYYY-MM-DD format
+ * Get current date in YYYY-MM-DD format (Local Time)
  */
 function getCurrentDate() {
-    return new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 /**
@@ -36,10 +48,17 @@ function getCurrentDate() {
  */
 function formatCurrency(amount) {
     if (amount === null || amount === undefined) return '$0';
+
+    // For unitary rates (like $0.15), we need decimals. 
+    // CLP standard is 0 decimals, so we override if amount has decimals or is less than 1
+    const hasDecimals = amount % 1 !== 0;
+    const isSmall = Math.abs(amount) < 1 && amount !== 0;
+
     return new Intl.NumberFormat('es-CL', {
         style: 'currency',
         currency: 'CLP',
-        minimumFractionDigits: 0
+        minimumFractionDigits: (hasDecimals || isSmall) ? 2 : 0,
+        maximumFractionDigits: 4
     }).format(amount);
 }
 
@@ -128,6 +147,8 @@ function showConfirm(title, message, onConfirm) {
 function createModal(title, content, buttons = []) {
     const backdrop = document.createElement('div');
     backdrop.className = 'modal-backdrop';
+    // Assign a unique ID to the backdrop for easier tracking
+    backdrop.id = 'modal-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
 
     const modal = document.createElement('div');
     modal.className = 'modal';
@@ -164,9 +185,18 @@ function createModal(title, content, buttons = []) {
 /**
  * Close modal
  */
-function closeModal(modal) {
-    modal.classList.remove('active');
-    setTimeout(() => modal.remove(), 300);
+function closeModal(element) {
+    if (!element) return;
+
+    // If we're passing an inner element, find the backdrop
+    const modalToClose = element.classList.contains('modal-backdrop')
+        ? element
+        : element.closest('.modal-backdrop');
+
+    if (modalToClose) {
+        modalToClose.classList.remove('active');
+        setTimeout(() => modalToClose.remove(), 300);
+    }
 }
 
 /**
@@ -250,7 +280,8 @@ function getStatusBadge(status) {
         'bodega': '<span class="badge badge-info">Bodega</span>',
         'pendiente': '<span class="badge badge-warning">Pendiente</span>',
         'completado': '<span class="badge badge-success">Completado</span>',
-        'cancelado': '<span class="badge badge-danger">Cancelado</span>'
+        'cancelado': '<span class="badge badge-danger">Cancelado</span>',
+        'baja': '<span class="badge badge-error">Baja (Retirado)</span>'
     };
 
     return badges[status] || `<span class="badge badge-neutral">${status}</span>`;
@@ -345,4 +376,12 @@ function downloadFile(content, filename, type = 'text/plain') {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+
+/**
+ * Format number with thousands separator
+ */
+function formatNumber(value) {
+    if (value === null || value === undefined) return '0';
+    return new Intl.NumberFormat('es-CL').format(value);
 }

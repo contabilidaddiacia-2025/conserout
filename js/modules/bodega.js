@@ -130,9 +130,11 @@ App.prototype.renderBodegaGrid = function () {
           <span>-</span>
           <span>Salida</span>
         </button>
-        <button class="btn btn-sm btn-ghost" onclick="app.viewMovimientosSuministro(${suministro.id})">
+        <button class="btn btn-sm btn-ghost" onclick="app.viewMovimientosSuministro(${suministro.id})" title="Historial">
           <span>📊</span>
-          <span>Historial</span>
+        </button>
+        <button class="btn btn-sm btn-ghost" onclick="app.editSuministro(${suministro.id})" title="Editar Suministro">
+          <span>✏️</span>
         </button>
         <button class="btn btn-sm btn-ghost" onclick="app.deleteSuministro(${suministro.id})" title="Eliminar Suministro">
           <span>🗑️</span>
@@ -182,7 +184,9 @@ App.prototype.setupBodegaFilters = function () {
   filterStock?.addEventListener('change', applyFilters);
 };
 
-App.prototype.showNuevoSuministroForm = function () {
+App.prototype.showNuevoSuministroForm = function (suministroId = null) {
+  const isEditing = suministroId !== null;
+  const suministro = isEditing ? db.getById('suministros', suministroId) : null;
   const tiposSuministro = db.getData('tipos_suministro');
   const modelos = db.getData('modelos');
   const marcas = db.getData('marcas');
@@ -193,48 +197,55 @@ App.prototype.showNuevoSuministroForm = function () {
         <label class="form-label required">Tipo de Suministro</label>
         <select class="form-select" name="tipo_suministro_id" id="tipoSuministroSelect" required onchange="app.toggleModelosCompatibles()">
           <option value="">Seleccione un tipo</option>
-          ${tiposSuministro.map(t => `<option value="${t.id}">${t.nombre}</option>`).join('')}
+          ${tiposSuministro.map(t => `<option value="${t.id}" ${suministro && suministro.tipo_suministro_id === t.id ? 'selected' : ''}>${t.nombre}</option>`).join('')}
         </select>
       </div>
       
       <div class="form-group">
         <label class="form-label required">Nombre</label>
-        <input type="text" class="form-input" name="nombre" required>
+        <input type="text" class="form-input" name="nombre" value="${suministro ? suministro.nombre : ''}" required>
       </div>
       
       <div class="form-group">
         <label class="form-label required">Código</label>
-        <input type="text" class="form-input" name="codigo" id="codigoSuministro" required>
+        <input type="text" class="form-input" name="codigo" id="codigoSuministro" value="${suministro ? suministro.codigo : ''}" required>
         <span class="form-help">El código debe ser único en el sistema</span>
       </div>
       
       <div class="form-group">
         <label class="form-label required">Stock Mínimo</label>
-        <input type="number" class="form-input" name="stock_minimo" min="0" value="5" required>
+        <input type="number" class="form-input" name="stock_minimo" min="0" value="${suministro ? suministro.stock_minimo : '5'}" required>
       </div>
       
-      <div class="form-group" id="modelosCompatiblesGroup" style="display: none;">
-        <label class="form-label">Modelos Compatibles</label>
-        <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-sm);">
-          ${modelos.map(modelo => {
-    const marca = marcas.find(m => m.id === modelo.marca_id);
-    return `
-              <label style="display: block; padding: var(--spacing-xs); cursor: pointer; border-radius: var(--radius-sm);" 
-                     onmouseover="this.style.background='var(--color-bg-tertiary)'" 
-                     onmouseout="this.style.background='transparent'">
-                <input type="checkbox" name="modelos_compatibles" value="${modelo.id}" style="margin-right: var(--spacing-xs);">
-                ${marca ? marca.nombre : 'N/A'} - ${modelo.nombre}
-              </label>
-            `;
-  }).join('')}
-        </div>
-        <span class="form-help">Selecciona los modelos de impresora compatibles con este suministro</span>
-      </div>
+      ${(() => {
+      const tipo = tiposSuministro.find(t => t.id === (suministro ? suministro.tipo_suministro_id : null));
+      const isTonerOrInk = tipo && (tipo.nombre === 'Toner' || tipo.nombre === 'Tinta');
+      return `
+          <div class="form-group" id="modelosCompatiblesGroup" style="display: ${isTonerOrInk ? 'block' : 'none'};">
+            <label class="form-label">Modelos Compatibles</label>
+            <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-sm);">
+              ${modelos.map(modelo => {
+        const marca = marcas.find(m => m.id === modelo.marca_id);
+        const checked = suministro && suministro.modelos_compatibles && suministro.modelos_compatibles.includes(modelo.id) ? 'checked' : '';
+        return `
+                  <label style="display: block; padding: var(--spacing-xs); cursor: pointer; border-radius: var(--radius-sm);" 
+                         onmouseover="this.style.background='var(--color-bg-tertiary)'" 
+                         onmouseout="this.style.background='transparent'">
+                    <input type="checkbox" name="modelos_compatibles" value="${modelo.id}" ${checked} style="margin-right: var(--spacing-xs);">
+                    ${marca ? marca.nombre : 'N/A'} - ${modelo.nombre}
+                  </label>
+                `;
+      }).join('')}
+            </div>
+            <span class="form-help">Selecciona los modelos de impresora compatibles con este suministro</span>
+          </div>
+        `;
+    })()}
     </form>
   `;
 
   const modal = createModal(
-    'Nuevo Suministro',
+    isEditing ? 'Editar Suministro' : 'Nuevo Suministro',
     formHTML,
     [
       {
@@ -243,7 +254,7 @@ App.prototype.showNuevoSuministroForm = function () {
         onClick: () => closeModal(modal)
       },
       {
-        text: 'Crear',
+        text: isEditing ? 'Actualizar' : 'Crear',
         class: 'btn-primary',
         onClick: () => {
           const form = document.getElementById('suministroForm');
@@ -255,9 +266,9 @@ App.prototype.showNuevoSuministroForm = function () {
           const formData = new FormData(form);
           const codigo = formData.get('codigo').trim().toUpperCase();
 
-          // Validate unique code
+          // Validate unique code (excluding current one if editing)
           const suministros = db.getData('suministros');
-          const codigoExiste = suministros.some(s => s.codigo.toUpperCase() === codigo);
+          const codigoExiste = suministros.some(s => s.codigo.toUpperCase() === codigo && (!isEditing || s.id !== suministroId));
 
           if (codigoExiste) {
             showToast(`El código "${codigo}" ya existe. Por favor use un código diferente.`, 'danger');
@@ -280,8 +291,14 @@ App.prototype.showNuevoSuministroForm = function () {
             modelos_compatibles: modelosCompatibles
           };
 
-          db.insert('suministros', data);
-          showToast('Suministro creado exitosamente', 'success');
+          if (isEditing) {
+            db.update('suministros', suministroId, data);
+            showToast('Suministro actualizado exitosamente', 'success');
+          } else {
+            db.insert('suministros', data);
+            showToast('Suministro creado exitosamente', 'success');
+          }
+
           closeModal(modal);
           this.renderBodegaGrid();
         }
@@ -291,6 +308,10 @@ App.prototype.showNuevoSuministroForm = function () {
 
   document.body.appendChild(modal);
   setTimeout(() => modal.classList.add('active'), 10);
+};
+
+App.prototype.editSuministro = function (id) {
+  this.showNuevoSuministroForm(id);
 };
 
 App.prototype.toggleModelosCompatibles = function () {

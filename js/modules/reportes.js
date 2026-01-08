@@ -71,7 +71,16 @@ App.prototype.showReporteConsumibles = function () {
           <label class="form-label">Contrato</label>
           <select class="form-select" id="repConsContrato">
             <option value="">Todos los contratos</option>
-            ${db.getData('contratos').map(c => `<option value="${c.id}">${c.numero_contrato}</option>`).join('')}
+            ${(() => {
+      const currUser = auth.getCurrentUser();
+      const isTechnician = currUser && currUser.perfil_id === 3;
+      let contracts = db.getData('contratos');
+      if (isTechnician) {
+        const asignados = db.getData('tecnicos_contrato').filter(tc => tc.tecnico_id === currUser.id).map(a => a.contrato_id);
+        contracts = contracts.filter(c => asignados.includes(c.id));
+      }
+      return contracts.map(c => `<option value="${c.id}">${c.numero_contrato}</option>`).join('');
+    })()}
           </select>
         </div>
       </div>
@@ -121,11 +130,23 @@ App.prototype.generarDataReporteConsumibles = function () {
   `;
 
   let totalItems = 0;
+  const currUser = auth.getCurrentUser();
+  const isTechnician = currUser && currUser.perfil_id === 3;
+  let assignedContratosIds = [];
+  if (isTechnician) {
+    assignedContratosIds = db.getData('tecnicos_contrato').filter(tc => tc.tecnico_id === currUser.id).map(a => a.contrato_id);
+  }
+
   movimientos.forEach(mov => {
     const sum = suministros.find(s => s.id === mov.suministro_id);
     const eq = equipos.find(e => e.id === mov.equipo_id);
 
-    // Filter by contract if selected
+    // Restriction for technicians
+    if (isTechnician) {
+      if (!eq || !eq.contrato_id || !assignedContratosIds.includes(eq.contrato_id)) return;
+    }
+
+    // Filter by contract if selected in form
     if (contratoId && (!eq || eq.contrato_id != contratoId)) return;
 
     totalItems += mov.cantidad;
@@ -169,7 +190,17 @@ App.prototype.showReporteContratos = function () {
         <div class="form-group m-0"><label class="form-label">Cliente</label>
           <select class="form-select" id="repContrCliente">
             <option value="">Todos los clientes</option>
-            ${db.getData('clientes').map(c => `<option value="${c.id}">${c.nombre}</option>`).join('')}
+            ${(() => {
+      const currUser = auth.getCurrentUser();
+      const isTechnician = currUser && currUser.perfil_id === 3;
+      let validClients = db.getData('clientes');
+      if (isTechnician) {
+        const assignedContratos = db.getData('tecnicos_contrato').filter(tc => tc.tecnico_id === currUser.id).map(a => a.contrato_id);
+        const clientIds = db.getData('contratos').filter(c => assignedContratos.includes(c.id)).map(c => c.cliente_id);
+        validClients = validClients.filter(cl => clientIds.includes(cl.id));
+      }
+      return validClients.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+    })()}
           </select>
         </div>
       </div>
@@ -193,9 +224,17 @@ App.prototype.showReporteContratos = function () {
 App.prototype.generarDataReporteContratos = function () {
   const estado = document.getElementById('repContrEstado').value;
   const clienteId = document.getElementById('repContrCliente').value;
+  const currUser = auth.getCurrentUser();
+  const isTechnician = currUser && currUser.perfil_id === 3;
+  let assignedIds = [];
+  if (isTechnician) {
+    assignedIds = db.getData('tecnicos_contrato').filter(tc => tc.tecnico_id === currUser.id).map(a => a.contrato_id);
+  }
+
   const contratos = db.getData('contratos').filter(c =>
     (!estado || c.estado === estado) &&
-    (!clienteId || c.cliente_id == clienteId)
+    (!clienteId || c.cliente_id == clienteId) &&
+    (!isTechnician || assignedIds.includes(c.id))
   );
   const clientes = db.getData('clientes');
   const resultDiv = document.getElementById('reporteContrResult');
@@ -245,7 +284,16 @@ App.prototype.showReporteContadoresContrato = function () {
         <div class="form-group m-0"><label class="form-label">Contrato/Proyecto</label>
           <select class="form-select" id="repContadContrato">
             <option value="">Todos los contratos</option>
-            ${db.getData('contratos').map(c => `<option value="${c.id}">${c.numero_contrato}</option>`).join('')}
+            ${(() => {
+      const currUser = auth.getCurrentUser();
+      const isTechnician = currUser && currUser.perfil_id === 3;
+      let contracts = db.getData('contratos');
+      if (isTechnician) {
+        const asignados = db.getData('tecnicos_contrato').filter(tc => tc.tecnico_id === currUser.id).map(a => a.contrato_id);
+        contracts = contracts.filter(c => asignados.includes(c.id));
+      }
+      return contracts.map(c => `<option value="${c.id}">${c.numero_contrato}</option>`).join('');
+    })()}
           </select>
         </div>
       </div>
@@ -270,6 +318,13 @@ App.prototype.generarDataReporteContadores = function () {
   const fin = document.getElementById('repContadFin').value;
   const contratoId = document.getElementById('repContadContrato').value;
   const resultDiv = document.getElementById('reporteContadResult');
+
+  const currUser = auth.getCurrentUser();
+  const isTechnician = currUser && currUser.perfil_id === 3;
+  let assignedContratosIds = [];
+  if (isTechnician) {
+    assignedContratosIds = db.getData('tecnicos_contrato').filter(tc => tc.tecnico_id === currUser.id).map(a => a.contrato_id);
+  }
 
   const lecturas = db.getData('contadores_equipos').filter(l =>
     (!inicio || l.fecha_lectura >= inicio) &&
@@ -298,6 +353,12 @@ App.prototype.generarDataReporteContadores = function () {
   lecturas.forEach(l => {
     const eq = equipos.find(e => e.id == l.equipo_id);
     if (!eq) return;
+
+    // Restriction for technicians
+    if (isTechnician) {
+      if (!eq.contrato_id || !assignedContratosIds.includes(eq.contrato_id)) return;
+    }
+
     const cont = contratos.find(c => c.id == eq.contrato_id);
     if (contratoId && eq.contrato_id != contratoId) return;
 

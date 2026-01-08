@@ -27,6 +27,9 @@ class App {
 
     // Filter menu by permissions
     this.filterMenuByPermissions();
+
+    // Default to dashboard
+    this.loadModule('dashboard');
   }
 
   loadUserInfo() {
@@ -247,12 +250,20 @@ class App {
   }
 
   renderContratosTable() {
-    const contratos = db.getData('contratos');
+    let contratos = db.getData('contratos');
     const clientes = db.getData('clientes');
     const equipos = db.getData('equipos');
     const tbody = document.getElementById('contratosTableBody');
 
     if (!tbody) return;
+
+    // Restriction for technicians
+    const currUser = auth.getCurrentUser();
+    if (currUser && currUser.perfil_id === 3) { // 3 = Técnico
+      const asignaciones = db.getData('tecnicos_contrato').filter(tc => tc.tecnico_id === currUser.id);
+      const asignadosIds = asignaciones.map(a => a.contrato_id);
+      contratos = contratos.filter(c => asignadosIds.includes(c.id));
+    }
 
     tbody.innerHTML = '';
 
@@ -474,27 +485,51 @@ class App {
         </div>
         
         <div class="detail-section">
-          <h4 class="detail-section-title">Equipos Asignados</h4>
-          <p><strong>${equipos.length}</strong> equipos en este contrato</p>
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-sm); margin-top: var(--spacing-md);">
-            <div style="text-align: center; padding: var(--spacing-md); background: rgba(34, 197, 94, 0.1); border-radius: var(--radius-md);">
-              <div style="font-size: var(--font-size-2xl); font-weight: bold; color: var(--color-success);">
-                ${equipos.filter(e => e.estado === 'instalado').length}
-              </div>
-              <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">Instalados</div>
-            </div>
-            <div style="text-align: center; padding: var(--spacing-md); background: rgba(251, 146, 60, 0.1); border-radius: var(--radius-md);">
-              <div style="font-size: var(--font-size-2xl); font-weight: bold; color: var(--color-warning);">
-                ${equipos.filter(e => e.estado === 'sin_instalar').length}
-              </div>
-              <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">Sin Instalar</div>
-            </div>
-            <div style="text-align: center; padding: var(--spacing-md); background: rgba(14, 165, 233, 0.1); border-radius: var(--radius-md);">
-              <div style="font-size: var(--font-size-2xl); font-weight: bold; color: var(--color-info);">
-                ${equipos.filter(e => e.estado === 'bodega').length}
-              </div>
-              <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary);">En Bodega</div>
-            </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+            <h4 class="detail-section-title" style="margin: 0;">Equipos en este Contrato</h4>
+            <button class="btn btn-sm btn-primary" onclick="app.showAsignarEquipoPool(${id})">
+              <span>+</span>
+              <span>Asignar Equipo desde Almacén</span>
+            </button>
+          </div>
+          <div class="table-container">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Equipo / Serie</th>
+                  <th>Ubicación</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${equipos.map(e => {
+      const mod = db.getById('modelos', e.modelo_id);
+      return `
+                    <tr>
+                      <td>
+                        <strong>${mod ? mod.nombre : 'N/A'}</strong><br>
+                        <code style="font-size: var(--font-size-xs);">${e.numero_serie}</code>
+                      </td>
+                      <td>${e.ubicacion || '-'}</td>
+                      <td>${getStatusBadge(e.estado)}</td>
+                      <td>
+                        <div class="table-actions">
+                          ${e.estado === 'sin_instalar' ? `
+                            <button class="btn btn-sm btn-ghost" onclick="app.showInstalacionForm(${e.id})" title="Instalar">🔧</button>
+                          ` : ''}
+                          <button class="btn btn-sm btn-ghost" onclick="app.showRegistroContadoresForm(${e.id})" title="Lectura">🔢</button>
+                          <button class="btn btn-sm btn-ghost" onclick="app.showCambioConsumibleForm(${e.id})" title="Consumible">🎨</button>
+                          <button class="btn btn-sm btn-ghost" onclick="app.viewHistorialEquipo(${e.id})" title="Hoja de Vida">📜</button>
+                          <button class="btn btn-sm btn-ghost text-danger" onclick="app.liberarEquipoContrato(${e.id}, ${id})" title="Retirar del Contrato">🔓</button>
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+    }).join('')}
+                ${equipos.length === 0 ? '<tr><td colspan="4" class="empty-state">No hay equipos asignados</td></tr>' : ''}
+              </tbody>
+            </table>
           </div>
         </div>
         
@@ -596,7 +631,7 @@ class App {
       'contratos': ['Administrador', 'Gestor'],
       'equipos-gestion': ['Administrador', 'Gestor'],
       'bodega': ['Administrador', 'Gestor'],
-      'cobros': ['Administrador', 'Gestor'],
+      'cobros': ['Administrador', 'Gestor', 'Técnico'],
       'materiales': ['Administrador', 'Gestor'],
       'tecnicos-tarifas': ['Administrador', 'Gestor'],
       'contadores': ['Administrador', 'Gestor', 'Técnico'],
@@ -637,10 +672,99 @@ class App {
       }
     });
   }
+  showAsignarEquipoPool(contratoId) {
+    const pool = db.getData('equipos').filter(e => e.contrato_id === null && e.estado !== 'baja');
+    const modelos = db.getData('modelos');
+    const marcas = db.getData('marcas');
+
+    const content = `
+      <div class="form-group">
+        <label class="form-label">Seleccione un equipo disponible del almacén</label>
+        <div class="table-container" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Equipo / Serie</th>
+                <th>Estado</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pool.map(e => {
+      const mod = modelos.find(m => m.id === e.modelo_id);
+      const mar = mod ? marcas.find(m => m.id === mod.marca_id) : null;
+      return `
+                  <tr>
+                    <td>
+                      <strong>${mar ? mar.nombre : ''} ${mod ? mod.nombre : 'N/A'}</strong><br>
+                      <code>${e.numero_serie}</code>
+                    </td>
+                    <td>${getStatusBadge(e.estado)}</td>
+                    <td>
+                      <button class="btn btn-sm btn-primary" onclick="app.asignarEquipoAContrato(${e.id}, ${contratoId})">
+                        Asignar
+                      </button>
+                    </td>
+                  </tr>
+                `;
+    }).join('')}
+              ${pool.length === 0 ? '<tr><td colspan="3" class="empty-state">No hay equipos libres en el almacén</td></tr>' : ''}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    const modal = createModal('Asignar Equipo desde Almacén', content, [
+      { text: 'Cerrar', class: 'btn-secondary', onClick: () => closeModal(modal) }
+    ]);
+
+    this.asignarEquipoAContrato = (equipoId, cId) => {
+      db.update('equipos', equipoId, {
+        contrato_id: cId,
+        estado: 'sin_instalar' // Reset to sin_instalar when assigned
+      });
+      showToast('Equipo asignado exitosamente', 'success');
+      closeModal(modal);
+      this.viewContrato(cId); // Refresh view
+    };
+
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('active'), 10);
+  }
+
+  liberarEquipoContrato(equipoId, contratoId) {
+    showConfirm(
+      'Retirar Equipo',
+      '¿Estás seguro que deseas retirar este equipo del contrato y devolverlo al almacén de equipos libres?',
+      () => {
+        db.update('equipos', equipoId, {
+          contrato_id: null,
+          estado: 'bodega',
+          ubicacion: 'Bodega Central',
+          fecha_instalacion: null
+        });
+        showToast('Equipo retirado y devuelto al almacén', 'success');
+        this.viewContrato(contratoId); // Refresh view
+      }
+    );
+  }
 }
 
 // Initialize app
 let app;
 document.addEventListener('DOMContentLoaded', () => {
-  app = new App();
+  try {
+    // Ensure services table has some data for dashboard if empty
+    if (db.getData('servicios').length === 0) {
+      db.setData('servicios', [
+        { id: 1, contrato_id: 1, tecnico_id: 3, fecha: getCurrentDate(), tipo: 'Mantenimiento', estado: 'completado' },
+        { id: 2, contrato_id: 2, tecnico_id: 3, fecha: getCurrentDate(), tipo: 'Reparación', estado: 'completado' }
+      ]);
+    }
+
+    app = new App();
+  } catch (error) {
+    console.error('Error al inicializar la aplicación:', error);
+  }
 });

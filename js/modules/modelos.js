@@ -4,7 +4,7 @@
  */
 
 App.prototype.loadModelosModule = function (container) {
-    container.innerHTML = `
+  container.innerHTML = `
     <div class="module-container">
       <div class="module-header">
         <h2 class="module-title">Gestión de Modelos</h2>
@@ -44,6 +44,7 @@ App.prototype.loadModelosModule = function (container) {
                 <th>Modelo</th>
                 <th>Marca</th>
                 <th>Tipo</th>
+                <th>Impresión</th>
                 <th>Equipos</th>
                 <th>Suministros</th>
                 <th>Acciones</th>
@@ -57,57 +58,62 @@ App.prototype.loadModelosModule = function (container) {
     </div>
   `;
 
-    this.renderModelosTable();
-    this.setupModelosFilters();
+  this.renderModelosTable();
+  this.setupModelosFilters();
 };
 
 App.prototype.renderModelosTable = function () {
-    const modelos = db.getData('modelos');
-    const marcas = db.getData('marcas');
-    const tiposEquipo = db.getData('tipos_equipo');
-    const equipos = db.getData('equipos');
-    const suministros = db.getData('suministros');
-    const tbody = document.getElementById('modelosTableBody');
+  const modelos = db.getData('modelos');
+  const marcas = db.getData('marcas');
+  const tiposEquipo = db.getData('tipos_equipo');
+  const equipos = db.getData('equipos');
+  const suministros = db.getData('suministros');
+  const tbody = document.getElementById('modelosTableBody');
 
-    if (!tbody) return;
+  if (!tbody) return;
 
-    tbody.innerHTML = '';
+  tbody.innerHTML = '';
 
-    // Populate filters
-    const filterMarca = document.getElementById('filterMarcaModelo');
-    const filterTipo = document.getElementById('filterTipoModelo');
+  // Populate filters
+  const filterMarca = document.getElementById('filterMarcaModelo');
+  const filterTipo = document.getElementById('filterTipoModelo');
 
-    if (filterMarca && filterMarca.options.length === 1) {
-        marcas.forEach(marca => {
-            const option = document.createElement('option');
-            option.value = marca.id;
-            option.textContent = marca.nombre;
-            filterMarca.appendChild(option);
-        });
-    }
+  if (filterMarca && filterMarca.options.length === 1) {
+    marcas.forEach(marca => {
+      const option = document.createElement('option');
+      option.value = marca.id;
+      option.textContent = marca.nombre;
+      filterMarca.appendChild(option);
+    });
+  }
 
-    if (filterTipo && filterTipo.options.length === 1) {
-        tiposEquipo.forEach(tipo => {
-            const option = document.createElement('option');
-            option.value = tipo.id;
-            option.textContent = tipo.nombre;
-            filterTipo.appendChild(option);
-        });
-    }
+  if (filterTipo && filterTipo.options.length === 1) {
+    tiposEquipo.forEach(tipo => {
+      const option = document.createElement('option');
+      option.value = tipo.id;
+      option.textContent = tipo.nombre;
+      filterTipo.appendChild(option);
+    });
+  }
 
-    modelos.forEach(modelo => {
-        const marca = marcas.find(m => m.id === modelo.marca_id);
-        const tipo = tiposEquipo.find(t => t.id === modelo.tipo_equipo_id);
-        const equiposModelo = equipos.filter(e => e.modelo_id === modelo.id);
-        const suministrosCompatibles = suministros.filter(s =>
-            s.modelos_compatibles && s.modelos_compatibles.includes(modelo.id)
-        );
+  modelos.forEach(modelo => {
+    const marca = marcas.find(m => m.id === modelo.marca_id);
+    const tipo = tiposEquipo.find(t => t.id === modelo.tipo_equipo_id);
+    const equiposModelo = equipos.filter(e => e.modelo_id === modelo.id);
+    const suministrosCompatibles = suministros.filter(s =>
+      s.modelos_compatibles && s.modelos_compatibles.includes(modelo.id)
+    );
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
       <td><strong>${modelo.nombre}</strong></td>
       <td>${marca ? marca.nombre : 'N/A'}</td>
       <td>${tipo ? tipo.nombre : 'N/A'}</td>
+      <td>
+        <span class="badge ${modelo.tipo_impresion === 'color' ? 'badge-secondary' : 'badge-ghost'}">
+          ${modelo.tipo_impresion === 'color' ? '🎨 Color' : '⚫ B/N'}
+        </span>
+      </td>
       <td>${equiposModelo.length}</td>
       <td>${suministrosCompatibles.length}</td>
       <td>
@@ -124,11 +130,11 @@ App.prototype.renderModelosTable = function () {
         </div>
       </td>
     `;
-        tbody.appendChild(tr);
-    });
+    tbody.appendChild(tr);
+  });
 
-    if (modelos.length === 0) {
-        tbody.innerHTML = `
+  if (modelos.length === 0) {
+    tbody.innerHTML = `
       <tr>
         <td colspan="6" class="empty-state">
           <div class="empty-state-icon">📱</div>
@@ -136,39 +142,39 @@ App.prototype.renderModelosTable = function () {
         </td>
       </tr>
     `;
-    }
+  }
 };
 
 App.prototype.setupModelosFilters = function () {
-    const searchInput = document.getElementById('searchModelo');
-    const filterMarca = document.getElementById('filterMarcaModelo');
-    const filterTipo = document.getElementById('filterTipoModelo');
+  const searchInput = document.getElementById('searchModelo');
+  const filterMarca = document.getElementById('filterMarcaModelo');
+  const filterTipo = document.getElementById('filterTipoModelo');
 
-    const applyFilters = () => {
-        const search = searchInput?.value.toLowerCase() || '';
-        const marcaId = filterMarca?.value || '';
-        const tipoId = filterTipo?.value || '';
+  const applyFilters = () => {
+    const search = searchInput?.value.toLowerCase() || '';
+    const marcaId = filterMarca?.value || '';
+    const tipoId = filterTipo?.value || '';
 
-        const rows = document.querySelectorAll('#modelosTableBody tr');
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            const matchesSearch = text.includes(search);
+    const rows = document.querySelectorAll('#modelosTableBody tr');
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      const matchesSearch = text.includes(search);
 
-            row.style.display = matchesSearch ? '' : 'none';
-        });
-    };
+      row.style.display = matchesSearch ? '' : 'none';
+    });
+  };
 
-    searchInput?.addEventListener('input', debounce(applyFilters, 300));
-    filterMarca?.addEventListener('change', applyFilters);
-    filterTipo?.addEventListener('change', applyFilters);
+  searchInput?.addEventListener('input', debounce(applyFilters, 300));
+  filterMarca?.addEventListener('change', applyFilters);
+  filterTipo?.addEventListener('change', applyFilters);
 };
 
 App.prototype.showModeloForm = function (modeloId = null) {
-    const modelo = modeloId ? db.getById('modelos', modeloId) : null;
-    const marcas = db.getData('marcas');
-    const tiposEquipo = db.getData('tipos_equipo');
+  const modelo = modeloId ? db.getById('modelos', modeloId) : null;
+  const marcas = db.getData('marcas');
+  const tiposEquipo = db.getData('tipos_equipo');
 
-    const formHTML = `
+  const formHTML = `
     <form id="modeloForm">
       <div class="form-group">
         <label class="form-label required">Marca</label>
@@ -200,64 +206,73 @@ App.prototype.showModeloForm = function (modeloId = null) {
           `).join('')}
         </select>
       </div>
+
+      <div class="form-group">
+        <label class="form-label required">Tipo de Impresión</label>
+        <select class="form-select" name="tipo_impresion" required>
+          <option value="bn" ${modelo && modelo.tipo_impresion === 'bn' ? 'selected' : ''}>Solo Blanco y Negro (B/N)</option>
+          <option value="color" ${modelo && modelo.tipo_impresion === 'color' ? 'selected' : ''}>Color / Blanco y Negro</option>
+        </select>
+      </div>
     </form>
   `;
 
-    const modal = createModal(
-        modeloId ? 'Editar Modelo' : 'Nuevo Modelo',
-        formHTML,
-        [
-            {
-                text: 'Cancelar',
-                class: 'btn-secondary',
-                onClick: () => closeModal(modal)
-            },
-            {
-                text: modeloId ? 'Actualizar' : 'Crear',
-                class: 'btn-primary',
-                onClick: () => {
-                    const form = document.getElementById('modeloForm');
-                    if (!form.checkValidity()) {
-                        form.reportValidity();
-                        return;
-                    }
+  const modal = createModal(
+    modeloId ? 'Editar Modelo' : 'Nuevo Modelo',
+    formHTML,
+    [
+      {
+        text: 'Cancelar',
+        class: 'btn-secondary',
+        onClick: () => closeModal(modal)
+      },
+      {
+        text: modeloId ? 'Actualizar' : 'Crear',
+        class: 'btn-primary',
+        onClick: () => {
+          const form = document.getElementById('modeloForm');
+          if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+          }
 
-                    const formData = new FormData(form);
-                    const data = {
-                        marca_id: parseInt(formData.get('marca_id')),
-                        nombre: formData.get('nombre').trim(),
-                        tipo_equipo_id: parseInt(formData.get('tipo_equipo_id'))
-                    };
+          const formData = new FormData(form);
+          const data = {
+            marca_id: parseInt(formData.get('marca_id')),
+            nombre: formData.get('nombre').trim(),
+            tipo_equipo_id: parseInt(formData.get('tipo_equipo_id')),
+            tipo_impresion: formData.get('tipo_impresion')
+          };
 
-                    if (modeloId) {
-                        db.update('modelos', modeloId, data);
-                        showToast('Modelo actualizado exitosamente', 'success');
-                    } else {
-                        db.insert('modelos', data);
-                        showToast('Modelo creado exitosamente', 'success');
-                    }
+          if (modeloId) {
+            db.update('modelos', modeloId, data);
+            showToast('Modelo actualizado exitosamente', 'success');
+          } else {
+            db.insert('modelos', data);
+            showToast('Modelo creado exitosamente', 'success');
+          }
 
-                    closeModal(modal);
-                    this.renderModelosTable();
-                }
-            }
-        ]
-    );
+          closeModal(modal);
+          this.renderModelosTable();
+        }
+      }
+    ]
+  );
 
-    document.body.appendChild(modal);
-    setTimeout(() => modal.classList.add('active'), 10);
+  document.body.appendChild(modal);
+  setTimeout(() => modal.classList.add('active'), 10);
 };
 
 App.prototype.viewModelo = function (id) {
-    const modelo = db.getById('modelos', id);
-    const marca = db.getById('marcas', modelo.marca_id);
-    const tipo = db.getById('tipos_equipo', modelo.tipo_equipo_id);
-    const equipos = db.getData('equipos').filter(e => e.modelo_id === id);
-    const suministros = db.getData('suministros').filter(s =>
-        s.modelos_compatibles && s.modelos_compatibles.includes(id)
-    );
+  const modelo = db.getById('modelos', id);
+  const marca = db.getById('marcas', modelo.marca_id);
+  const tipo = db.getById('tipos_equipo', modelo.tipo_equipo_id);
+  const equipos = db.getData('equipos').filter(e => e.modelo_id === id);
+  const suministros = db.getData('suministros').filter(s =>
+    s.modelos_compatibles && s.modelos_compatibles.includes(id)
+  );
 
-    const content = `
+  const content = `
     <div style="display: grid; gap: var(--spacing-lg);">
       <div class="detail-section">
         <h4 class="detail-section-title">Información del Modelo</h4>
@@ -308,46 +323,46 @@ App.prototype.viewModelo = function (id) {
     </div>
   `;
 
-    const modal = createModal(`Detalles: ${marca.nombre} ${modelo.nombre}`, content, [
-        {
-            text: 'Cerrar',
-            class: 'btn-secondary',
-            onClick: () => closeModal(modal)
-        },
-        {
-            text: 'Editar',
-            class: 'btn-primary',
-            onClick: () => {
-                closeModal(modal);
-                this.showModeloForm(id);
-            }
-        }
-    ]);
+  const modal = createModal(`Detalles: ${marca.nombre} ${modelo.nombre}`, content, [
+    {
+      text: 'Cerrar',
+      class: 'btn-secondary',
+      onClick: () => closeModal(modal)
+    },
+    {
+      text: 'Editar',
+      class: 'btn-primary',
+      onClick: () => {
+        closeModal(modal);
+        this.showModeloForm(id);
+      }
+    }
+  ]);
 
-    document.body.appendChild(modal);
-    setTimeout(() => modal.classList.add('active'), 10);
+  document.body.appendChild(modal);
+  setTimeout(() => modal.classList.add('active'), 10);
 };
 
 App.prototype.editModelo = function (id) {
-    this.showModeloForm(id);
+  this.showModeloForm(id);
 };
 
 App.prototype.deleteModelo = function (id) {
-    const modelo = db.getById('modelos', id);
-    const equipos = db.getData('equipos').filter(e => e.modelo_id === id);
+  const modelo = db.getById('modelos', id);
+  const equipos = db.getData('equipos').filter(e => e.modelo_id === id);
 
-    if (equipos.length > 0) {
-        showToast(`No se puede eliminar. El modelo tiene ${equipos.length} equipo(s) asociado(s)`, 'danger');
-        return;
+  if (equipos.length > 0) {
+    showToast(`No se puede eliminar. El modelo tiene ${equipos.length} equipo(s) asociado(s)`, 'danger');
+    return;
+  }
+
+  showConfirm(
+    'Eliminar Modelo',
+    `¿Estás seguro que deseas eliminar el modelo ${modelo.nombre}?`,
+    () => {
+      db.delete('modelos', id);
+      showToast('Modelo eliminado exitosamente', 'success');
+      this.renderModelosTable();
     }
-
-    showConfirm(
-        'Eliminar Modelo',
-        `¿Estás seguro que deseas eliminar el modelo ${modelo.nombre}?`,
-        () => {
-            db.delete('modelos', id);
-            showToast('Modelo eliminado exitosamente', 'success');
-            this.renderModelosTable();
-        }
-    );
+  );
 };

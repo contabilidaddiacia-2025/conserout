@@ -105,12 +105,25 @@ App.prototype.loadDashboardModule = function (container) {
 
     this.loadDashboardMetrics();
     this.loadContratosTable();
-    this.initCharts();
+
+    // Defer chart initialization slightly to ensure container is fully ready in DOM
+    setTimeout(() => {
+        this.initCharts();
+    }, 50);
 };
 
 App.prototype.loadDashboardMetrics = function () {
     // Contratos vigentes
-    const contratos = db.getData('contratos') || [];
+    let contratos = db.getData('contratos') || [];
+    const currUser = auth.getCurrentUser();
+    const isTechnician = currUser && currUser.perfil_id === 3;
+    let assignedIds = [];
+
+    if (isTechnician) {
+        assignedIds = db.getData('tecnicos_contrato').filter(tc => tc.tecnico_id === currUser.id).map(a => a.contrato_id);
+        contratos = contratos.filter(c => assignedIds.includes(c.id));
+    }
+
     const contratosVigentes = contratos.filter(c => c.estado === 'vigente');
     const el = document.getElementById('contratosVigentes');
     if (el) el.textContent = contratosVigentes.length;
@@ -121,7 +134,10 @@ App.prototype.loadDashboardMetrics = function () {
     if (elChange) elChange.textContent = `${contratosPercentage}% del total`;
 
     // Equipos
-    const equipos = db.getData('equipos') || [];
+    let equipos = db.getData('equipos') || [];
+    if (isTechnician) {
+        equipos = equipos.filter(e => e.contrato_id && assignedIds.includes(e.contrato_id));
+    }
     const equiposInstalados = equipos.filter(e => e.estado === 'instalado');
     const equiposSinInstalar = equipos.filter(e => e.estado === 'sin_instalar');
 
@@ -131,20 +147,50 @@ App.prototype.loadDashboardMetrics = function () {
     if (elEqS) elEqS.textContent = equiposSinInstalar.length;
 
     // Valores
-    const valorTotal = contratos.reduce((sum, c) => sum + (c.valor_total || 0), 0);
-    const valorCobrado = valorTotal * 0.65; // Simulado
-    const valorPorCobrar = valorTotal - valorCobrado;
+    // Valores
+    // REQ: Total Proyectos (Suma valor_total de contratos)
+    // REQ: Valor Cobrado (Suma de cobros PAGADOS)
+    // REQ: Por Cobrar (Total Proyectos - Valor Cobrado)
+
+    // 1. Total Projects Value
+    const totalContratosValue = contratos.reduce((sum, c) => sum + (c.valor_total || 0), 0);
+
+    // 2. Collected Value (Real payments)
+    let cobros = db.getData('cobros') || [];
+    if (isTechnician) {
+        cobros = cobros.filter(c => assignedIds.includes(c.contrato_id));
+    }
+    const valorCobrado = cobros
+        .filter(c => c.estado === 'pagado')
+        .reduce((sum, c) => sum + (c.monto_total || 0), 0);
+
+    // 3. Pending (Total Projects - Collected)
+    // This represents the potential remaining revenue from the contracts
+    const valorPorCobrar = totalContratosValue - valorCobrado;
 
     const elValC = document.getElementById('valorCobrado');
     if (elValC) elValC.textContent = formatCurrency(valorCobrado);
+
     const elValP = document.getElementById('valorPorCobrar');
-    if (elValP) elValP.textContent = formatCurrency(valorPorCobrar);
+    if (elValP) {
+        // We show the pending amount and maybe the total for context if possible, 
+        // but the UI only has space for one sub-value. 
+        // User asked: "por cobrar has la resta del total de todos los proyectos menos los valores cobrados"
+        elValP.textContent = formatCurrency(valorPorCobrar);
+    }
 
     // Servicios del mes
-    const servicios = db.getData('servicios') || [];
+    let servicios = db.getData('servicios') || [];
+    if (isTechnician) {
+        servicios = servicios.filter(s => {
+            const eq = equipos.find(e => e.id === s.equipo_id);
+            return eq && eq.contrato_id && assignedIds.includes(eq.contrato_id);
+        });
+    }
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
     const serviciosMes = servicios.filter(s => {
+        if (!s.fecha) return false;
         const fecha = new Date(s.fecha);
         return fecha.getMonth() === currentMonth && fecha.getFullYear() === currentYear;
     });
@@ -156,7 +202,16 @@ App.prototype.loadDashboardMetrics = function () {
 };
 
 App.prototype.loadContratosTable = function () {
-    const contratos = db.getData('contratos') || [];
+    let contratos = db.getData('contratos') || [];
+    const currUser = auth.getCurrentUser();
+    const isTechnician = currUser && currUser.perfil_id === 3;
+    let assignedIds = [];
+
+    if (isTechnician) {
+        assignedIds = db.getData('tecnicos_contrato').filter(tc => tc.tecnico_id === currUser.id).map(a => a.contrato_id);
+        contratos = contratos.filter(c => assignedIds.includes(c.id));
+    }
+
     const clientes = db.getData('clientes') || [];
     const equipos = db.getData('equipos') || [];
 
@@ -196,7 +251,18 @@ App.prototype.initCharts = function () {
     if (!consumoEl) return;
 
     const consumoCtx = consumoEl.getContext('2d');
-    const contratos = (db.getData('contratos') || []).filter(c => c.estado === 'vigente');
+    const currUser = auth.getCurrentUser();
+    const isTechnician = currUser && currUser.perfil_id === 3;
+    let assignedIds = [];
+
+    if (isTechnician) {
+        assignedIds = db.getData('tecnicos_contrato').filter(tc => tc.tecnico_id === currUser.id).map(a => a.contrato_id);
+    }
+
+    const contratos = (db.getData('contratos') || []).filter(c =>
+        c.estado === 'vigente' &&
+        (!isTechnician || assignedIds.includes(c.id))
+    );
     const clientes = db.getData('clientes') || [];
 
     const months = ['Julio', 'Agosto', 'Sept', 'Octubre', 'Nov', 'Dic'];
@@ -232,7 +298,13 @@ App.prototype.initCharts = function () {
     if (!marcasEl) return;
 
     const marcasCtx = marcasEl.getContext('2d');
-    const equipos = db.getData('equipos') || [];
+    let equipos = db.getData('equipos') || [];
+
+    if (isTechnician) {
+        const assignedIds = db.getData('tecnicos_contrato').filter(tc => tc.tecnico_id === currUser.id).map(a => a.contrato_id);
+        equipos = equipos.filter(e => e.contrato_id && assignedIds.includes(e.contrato_id));
+    }
+
     const modelos = db.getData('modelos') || [];
     const marcas = db.getData('marcas') || [];
 

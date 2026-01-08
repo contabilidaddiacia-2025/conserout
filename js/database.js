@@ -112,12 +112,12 @@ class Database {
 
         // Modelos
         this.setData('modelos', [
-            { id: 1, marca_id: 1, nombre: 'LaserJet Pro M404dn', tipo_equipo_id: 1 },
-            { id: 2, marca_id: 1, nombre: 'LaserJet Pro MFP M428fdw', tipo_equipo_id: 2 },
-            { id: 3, marca_id: 2, nombre: 'imageRUNNER 2625i', tipo_equipo_id: 2 },
-            { id: 4, marca_id: 3, nombre: 'EcoTank L3250', tipo_equipo_id: 2 },
-            { id: 5, marca_id: 4, nombre: 'HL-L2350DW', tipo_equipo_id: 1 },
-            { id: 6, marca_id: 5, nombre: 'VersaLink C405', tipo_equipo_id: 2 }
+            { id: 1, marca_id: 1, nombre: 'LaserJet Pro M404dn', tipo_equipo_id: 1, tipo_impresion: 'bn' },
+            { id: 2, marca_id: 1, nombre: 'LaserJet Pro MFP M428fdw', tipo_equipo_id: 2, tipo_impresion: 'bn' },
+            { id: 3, marca_id: 2, nombre: 'imageRUNNER 2625i', tipo_equipo_id: 2, tipo_impresion: 'bn' },
+            { id: 4, marca_id: 3, nombre: 'EcoTank L3250', tipo_equipo_id: 2, tipo_impresion: 'bn' },
+            { id: 5, marca_id: 4, nombre: 'HL-L2350DW', tipo_equipo_id: 1, tipo_impresion: 'bn' },
+            { id: 6, marca_id: 5, nombre: 'VersaLink C405', tipo_equipo_id: 2, tipo_impresion: 'color' }
         ]);
 
         // Tipos de impresión
@@ -300,6 +300,12 @@ class Database {
             }
         ]);
 
+        // Equipos iniciales (sin contrato para el Pool)
+        this.setData('equipos', [
+            { id: 1, modelo_id: 1, numero_serie: 'HP-M404-001', contrato_id: null, ubicacion: 'Bodega Central', estado: 'bodega', fecha_instalacion: null },
+            { id: 2, modelo_id: 2, numero_serie: 'HP-M428-002', contrato_id: null, ubicacion: 'Bodega Central', estado: 'bodega', fecha_instalacion: null },
+            { id: 3, modelo_id: 3, numero_serie: 'CAN-2625-003', contrato_id: null, ubicacion: 'Bodega Central', estado: 'bodega', fecha_instalacion: null }
+        ]);
         // Bodega
         this.setData('bodega', [
             { id: 1, suministro_id: 1, cantidad: 25, ubicacion: 'Estante A1', fecha_ingreso: '2024-01-10' },
@@ -310,7 +316,11 @@ class Database {
         ]);
 
         // Servicios
-        this.setData('servicios', []);
+        this.setData('servicios', [
+            { id: 1, contrato_id: 1, tecnico_id: 3, fecha: getCurrentDate(), tipo: 'preventivo', estado: 'completado' },
+            { id: 2, contrato_id: 2, tecnico_id: 3, fecha: getCurrentDate(), tipo: 'correctivo', estado: 'completado' },
+            { id: 3, contrato_id: 1, tecnico_id: 3, fecha: getCurrentDate(), tipo: 'revisión', estado: 'completado' }
+        ]);
         this.setData('mantenimientos', []);
         this.setData('instalaciones', []);
         this.setData('cambios_consumibles', []);
@@ -318,6 +328,9 @@ class Database {
         this.setData('cobros', []);
         this.setData('notificaciones', []);
         this.setData('hitos_contrato', []);
+
+        // Force refresh initialized flag to apply new seed if desired (optional)
+        // localStorage.setItem('conserout_initialized', 'true');
     }
 
     /**
